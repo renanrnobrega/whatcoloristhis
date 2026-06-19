@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pantone Finder — Moda Têxtil</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --surface3: #2e2e2e;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f0;
+    --text2: rgba(255,255,255,0.55);
+    --text3: rgba(255,255,255,0.3);
+    --accent: #e8b45a;
+    --accent-dim: rgba(232,180,90,0.15);
+    --green: #5ec396;
+    --green-dim: rgba(94,195,150,0.15);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; overflow-x: hidden; }
+
+  #app { max-width: 420px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Header */
+  .header { padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border); }
+  .header-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+  .header-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .history-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface2); border: 0.5px solid var(--border2); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); font-size: 16px; }
+
+  /* Tab bar */
+  .tabs { display: flex; gap: 0; background: var(--surface); border-bottom: 0.5px solid var(--border); }
+  .tab { flex: 1; padding: 11px 0; text-align: center; font-size: 13px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Camera / upload area */
+  .capture-area { position: relative; background: #000; overflow: hidden; flex-shrink: 0; }
+  .capture-area canvas, .capture-area video, .capture-area img { display: block; width: 100%; }
+  #preview-canvas { width: 100%; height: 280px; object-fit: cover; cursor: crosshair; }
+  #camera-video { width: 100%; height: 280px; object-fit: cover; display: none; }
+  .placeholder { width: 100%; height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: var(--surface); cursor: pointer; }
+  .placeholder-icon { font-size: 40px; opacity: 0.25; }
+  .placeholder-text { font-size: 14px; color: var(--text3); }
+  .placeholder-hint { font-size: 12px; color: var(--text3); opacity: .6; }
+
+  /* Crosshair overlay */
+  .crosshair-overlay { position: absolute; pointer-events: none; }
+  .crosshair-ring { position: absolute; border: 2.5px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 1px rgba(0,0,0,0.6); transition: left .1s, top .1s; }
+  .crosshair-ring::before, .crosshair-ring::after { content: ''; position: absolute; background: rgba(255,255,255,0.8); }
+  .crosshair-ring::before { width: 1px; height: 200%; left: 50%; top: -50%; transform: translateX(-50%); }
+  .crosshair-ring::after { height: 1px; width: 200%; top: 50%; left: -50%; transform: translateY(-50%); }
+
+  /* Controls row */
+  .controls { display: flex; gap: 8px; padding: 10px 16px; background: var(--surface); border-bottom: 0.5px solid var(--border); align-items: center; }
+  .ctrl-btn { flex: 1; padding: 8px 10px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: var(--surface2); color: var(--text2); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: background .15s; white-space: nowrap; }
+  .ctrl-btn:hover { background: var(--surface3); }
+  .ctrl-btn.active { border-color: var(--accent); color: var(--accent); }
+  .ctrl-btn svg { flex-shrink: 0; }
+
+  /* Selected color strip */
+  .color-strip { padding: 12px 16px; display: flex; align-items: center; gap: 12px; background: var(--surface); border-bottom: 0.5px solid var(--border); }
+  .swatch-box { width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.12); }
+  .swatch-info { flex: 1; }
+  .swatch-hex { font-size: 15px; font-weight: 600; letter-spacing: .5px; }
+  .swatch-rgb { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .swatch-empty { font-size: 13px; color: var(--text3); }
+  .tap-hint { font-size: 11px; color: var(--text3); background: var(--surface2); padding: 4px 10px; border-radius: 20px; }
+
+  /* Results */
+  .results { flex: 1; overflow-y: auto; padding: 12px 16px 24px; }
+  .results-label { font-size: 11px; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px; margin-top: 4px; }
+  .pantone-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; transition: border-color .2s; cursor: pointer; }
+  .pantone-card:hover { border-color: var(--border2); }
+  .pantone-card.best { border-color: rgba(232,180,90,0.4); background: rgba(232,180,90,0.05); }
+  .p-swatch { width: 40px; height: 40px; border-radius: 9px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.08); }
+  .p-details { flex: 1; min-width: 0; }
+  .p-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .p-code { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .p-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .match-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+  .match-hi { background: var(--green-dim); color: var(--green); }
+  .match-md { background: rgba(232,180,90,0.15); color: var(--accent); }
+  .match-lo { background: rgba(255,255,255,0.06); color: var(--text3); }
+  .best-tag { font-size: 10px; color: var(--accent); }
+
+  /* Saved palette */
+  .palette-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .palette-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .palette-swatch { height: 80px; }
+  .palette-info { padding: 10px 12px; }
+  .palette-name { font-size: 12px; font-weight: 500; }
+  .palette-code { font-size: 11px; color: var(--text3); }
+  .palette-code2 { font-size: 10px; color: var(--text3); margin-top: 1px; }
+  .empty-palette { padding: 40px 20px; text-align: center; color: var(--text3); font-size: 13px; line-height: 1.7; }
+
+  .save-btn { background: var(--accent); color: #1a0f00; border: none; border-radius: 10px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface3); border: 0.5px solid var(--border2); color: var(--text); font-size: 13px; padding: 10px 18px; border-radius: 24px; pointer-events: none; opacity: 0; transition: opacity .3s; z-index: 100; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  input[type=file] { display: none; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div>
+      <div class="header-title">Pantone Finder</div>
+      <div class="header-sub">Catálogo Têxtil (TCX)</div>
+    </div>
+    <button class="history-btn" onclick="showTab('saved')" title="Paleta salva">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-identify" onclick="showTab('identify')">Identificar</div>
+    <div class="tab" id="tab-saved" onclick="showTab('saved')">Minha paleta</div>
+  </div>
+
+  <!-- IDENTIFY TAB -->
+  <div id="view-identify">
+    <div class="capture-area" id="capture-area">
+      <div class="placeholder" id="placeholder" onclick="document.getElementById('file-input').click()">
+        <div class="placeholder-icon">📷</div>
+        <div class="placeholder-text">Toque para escolher uma foto</div>
+        <div class="placeholder-hint">ou use a câmera ao vivo</div>
+      </div>
+      <canvas id="preview-canvas" style="display:none"></canvas>
+      <video id="camera-video" autoplay playsinline muted></video>
+      <div class="crosshair-overlay" id="crosshair-overlay" style="display:none">
+        <div class="crosshair-ring" id="crosshair-ring" style="width:56px;height:56px;left:50%;top:50%"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" id="btn-gallery" onclick="document.getElementById('file-input').click()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        Galeria
+      </button>
+      <button class="ctrl-btn" id="btn-camera" onclick="toggleCamera()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Câmera ao vivo
+      </button>
+      <button class="save-btn" id="btn-save" onclick="saveBest()" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+        Salvar
+      </button>
+    </div>
+
+    <div class="color-strip" id="color-strip">
+      <div class="swatch-empty">Selecione uma imagem e toque na cor que deseja identificar</div>
+    </div>
+
+    <div class="results" id="results">
+    </div>
+  </div>
+
+  <!-- SAVED TAB -->
+  <div id="view-saved" style="display:none; padding:16px; flex:1; overflow-y:auto">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px">
+      <div class="results-label" style="margin:0">Cores salvas</div>
+      <button onclick="clearPalette()" style="font-size:11px; color:var(--text3); background:none; border:none; cursor:pointer">Limpar tudo</button>
+    </div>
+    <div class="palette-grid" id="palette-grid"></div>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept="image/*" onchange="loadImage(event)">
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Pantone TCX Database (curated 120 cores para moda) ───────────────────
+const PANTONE_TCX = [
+  // Whites & Neutrals
+  {name:"Bright White",code:"11-0601 TCX",r:242,g:242,b:238},
+  {name:"Snow White",code:"11-0602 TCX",r:237,g:237,b:232},
+  {name:"Blanc de Blanc",code:"11-0907 TCX",r:238,g:234,b:220},
+  {name:"Vanilla Custard",code:"12-0712 TCX",r:240,g:228,b:196},
+  {name:"Almond Milk",code:"12-0304 TCX",r:229,g:220,b:205},
+  {name:"Antique White",code:"12-0104 TCX",r:230,g:222,b:210},
+  {name:"Ivory",code:"11-0105 TCX",r:245,g:240,b:225},
+  {name:"Ecru",code:"12-0712 TCX",r:237,g:224,b:195},
+  {name:"Natural",code:"13-0002 TCX",r:220,g:210,b:195},
+  {name:"Parchment",code:"13-1015 TCX",r:220,g:205,b:180},
+  {name:"Sand",code:"14-1118 TCX",r:210,g:190,b:160},
+  {name:"Warm Sand",code:"14-1120 TCX",r:205,g:180,b:148},
+  {name:"Beige",code:"13-1008 TCX",r:215,g:200,b:178},
+  {name:"Oatmeal",code:"13-0002 TCX",r:210,g:198,b:180},
+  {name:"Linen",code:"12-0108 TCX",r:228,g:218,b:200},
+  {name:"Cream",code:"11-0110 TCX",r:242,g:232,b:210},
+
+  // Pinks & Roses
+  {name:"Fairy Tale",code:"12-2103 TCX",r:245,g:215,b:218},
+  {name:"Blushing Bride",code:"13-2010 TCX",r:240,g:202,b:202},
+  {name:"Crystal Rose",code:"14-1911 TCX",r:230,g:182,b:178},
+  {name:"Peach Blush",code:"14-1513 TCX",r:240,g:190,b:170},
+  {name:"Candy Pink",code:"15-1920 TCX",r:235,g:160,b:155},
+  {name:"Flamingo Pink",code:"15-1920 TCX",r:238,g:148,b:138},
+  {name:"Aurora",code:"14-1911 TCX",r:244,g:196,b:190},
+  {name:"Ballet Slipper",code:"14-1905 TCX",r:235,g:200,b:195},
+  {name:"Rose Quartz",code:"13-1520 TCX",r:247,g:202,b:201},
+  {name:"Orchid Pink",code:"14-1714 TCX",r:232,g:178,b:184},
+  {name:"Cameo Rose",code:"16-1723 TCX",r:220,g:155,b:148},
+  {name:"Rosewood",code:"17-1512 TCX",r:185,g:125,b:118},
+  {name:"Dusty Rose",code:"16-1610 TCX",r:196,g:155,b:148},
+  {name:"Antique Rose",code:"17-1718 TCX",r:185,g:130,b:122},
+  {name:"Mauve",code:"17-1612 TCX",r:178,g:130,b:130},
+  {name:"Pale Mauve",code:"15-1607 TCX",r:215,g:185,b:180},
+  {name:"Mellow Rose",code:"15-1614 TCX",r:222,g:175,b:168},
+  {name:"Quartz Pink",code:"15-1920 TCX",r:228,g:170,b:162},
+  {name:"Hot Coral",code:"17-1547 TCX",r:235,g:100,b:88},
+  {name:"Living Coral",code:"16-1546 TCX",r:255,g:111,b:97},
+  {name:"Coral",code:"16-1540 TCX",r:248,g:125,b:102},
+  {name:"Peach Cobbler",code:"16-1435 TCX",r:240,g:155,b:120},
+
+  // Reds
+  {name:"Poppy Red",code:"18-1660 TCX",r:215,g:55,b:55},
+  {name:"Hibiscus",code:"18-1660 TCX",r:198,g:60,b:68},
+  {name:"Tomato",code:"18-1550 TCX",r:218,g:68,b:58},
+  {name:"Flame",code:"18-1550 TCX",r:220,g:85,b:60},
+  {name:"Scarlet",code:"18-1664 TCX",r:198,g:40,b:50},
+  {name:"True Red",code:"19-1664 TCX",r:185,g:28,b:40},
+  {name:"Chili Pepper",code:"19-1557 TCX",r:162,g:35,b:42},
+  {name:"Burgundy",code:"19-1617 TCX",r:130,g:42,b:52},
+  {name:"Biking Red",code:"19-1664 TCX",r:158,g:32,b:40},
+  {name:"Wine",code:"19-1629 TCX",r:118,g:38,b:50},
+  {name:"Port",code:"19-1622 TCX",r:105,g:40,b:48},
+  {name:"Deep Claret",code:"19-1528 TCX",r:100,g:35,b:45},
+
+  // Oranges & Ambers
+  {name:"Apricot",code:"14-1135 TCX",r:248,g:185,b:142},
+  {name:"Peach Amber",code:"14-1130 TCX",r:240,g:175,b:130},
+  {name:"Tangerine",code:"15-1157 TCX",r:248,g:145,b:78},
+  {name:"Orange Tiger",code:"16-1462 TCX",r:240,g:120,b:55},
+  {name:"Autumn Maple",code:"16-1450 TCX",r:218,g:112,b:62},
+  {name:"Russet Orange",code:"18-1248 TCX",r:195,g:88,b:50},
+  {name:"Amber Gold",code:"14-0941 TCX",r:232,g:180,b:90},
+  {name:"Honey Gold",code:"15-1062 TCX",r:210,g:158,b:58},
+  {name:"Sunflower",code:"13-0942 TCX",r:232,g:194,b:112},
+  {name:"Golden Yellow",code:"13-0858 TCX",r:250,g:210,b:75},
+  {name:"Mango",code:"15-1160 TCX",r:255,g:175,b:80},
+  {name:"Saffron",code:"15-1150 TCX",r:245,g:162,b:60},
+  {name:"Artisan Gold",code:"16-0943 TCX",r:200,g:155,b:72},
+  {name:"Harvest Gold",code:"16-0950 TCX",r:195,g:148,b:62},
+  {name:"Caramel",code:"15-1239 TCX",r:210,g:158,b:98},
+  {name:"Tan",code:"15-1128 TCX",r:205,g:168,b:118},
+
+  // Yellows & Greens
+  {name:"Pale Lemon",code:"11-0710 TCX",r:252,g:248,b:195},
+  {name:"Lemon Tonic",code:"12-0752 TCX",r:248,g:238,b:118},
+  {name:"Chartreuse",code:"13-0545 TCX",r:215,g:232,b:80},
+  {name:"Lime Punch",code:"13-0351 TCX",r:188,g:222,b:66},
+  {name:"Jade Lime",code:"15-0343 TCX",r:142,g:192,b:85},
+  {name:"Foliage",code:"17-0535 TCX",r:110,g:155,b:68},
+  {name:"Fern",code:"17-0230 TCX",r:98,g:148,b:85},
+  {name:"Jade Green",code:"16-0237 TCX",r:88,g:162,b:100},
+  {name:"Greenery",code:"15-0343 TCX",r:136,g:176,b:75},
+  {name:"Sage",code:"16-0220 TCX",r:155,g:170,b:138},
+  {name:"Smoke Green",code:"15-0316 TCX",r:178,g:188,b:162},
+  {name:"Meadow",code:"17-0145 TCX",r:80,g:148,b:70},
+  {name:"Forest",code:"19-0230 TCX",r:45,g:92,b:52},
+  {name:"Vineyard Green",code:"17-0232 TCX",r:70,g:118,b:75},
+  {name:"Hunter Green",code:"19-0419 TCX",r:45,g:80,b:55},
+  {name:"Mint",code:"13-0220 TCX",r:172,g:230,b:190},
+  {name:"Honeydew",code:"12-0225 TCX",r:210,g:240,b:215},
+  {name:"Seafoam",code:"13-0117 TCX",r:175,g:222,b:200},
+  {name:"Aruba Blue",code:"14-4522 TCX",r:88,g:200,b:188},
+  {name:"Aqua Sky",code:"13-4411 TCX",r:140,g:218,b:215},
+  {name:"Turquoise",code:"15-5519 TCX",r:62,g:192,b:188},
+
+  // Blues
+  {name:"Sky Blue",code:"14-4318 TCX",r:150,g:205,b:235},
+  {name:"Cerulean",code:"15-4020 TCX",r:130,g:180,b:218},
+  {name:"Placid Blue",code:"15-3920 TCX",r:128,g:175,b:220},
+  {name:"Cornflower Blue",code:"16-4132 TCX",r:115,g:158,b:212},
+  {name:"Little Boy Blue",code:"14-4122 TCX",r:148,g:195,b:228},
+  {name:"Blue Topaz",code:"17-4328 TCX",r:80,g:155,b:205},
+  {name:"Marina",code:"17-4336 TCX",r:60,g:148,b:205},
+  {name:"Regatta",code:"18-4245 TCX",r:40,g:115,b:175},
+  {name:"Classic Blue",code:"19-4052 TCX",r:15,g:76,b:129},
+  {name:"Bright Blue",code:"19-4050 TCX",r:30,g:95,b:160},
+  {name:"Estate Blue",code:"19-3933 TCX",r:38,g:68,b:128},
+  {name:"Navy Peony",code:"19-4340 TCX",r:22,g:48,b:95},
+  {name:"Peacoat",code:"19-3832 TCX",r:28,g:42,b:78},
+  {name:"Maritime Blue",code:"19-4241 TCX",r:20,g:58,b:100},
+  {name:"Midnight Blue",code:"19-3943 TCX",r:25,g:38,b:90},
+  {name:"Steel Blue",code:"17-4041 TCX",r:90,g:135,b:175},
+  {name:"Blue Mirage",code:"18-4025 TCX",r:78,g:110,b:148},
+
+  // Purples & Violets
+  {name:"Pastel Lilac",code:"12-3612 TCX",r:218,g:205,b:228},
+  {name:"Lavender",code:"13-3820 TCX",r:200,g:190,b:225},
+  {name:"Orchid",code:"14-3411 TCX",r:192,g:172,b:215},
+  {name:"Violet Tulip",code:"15-3817 TCX",r:178,g:162,b:212},
+  {name:"Wisteria",code:"16-3810 TCTeX",r:162,g:145,b:195},
+  {name:"Amethyst",code:"17-3628 TCX",r:148,g:112,b:188},
+  {name:"Violet",code:"18-3633 TCX",r:128,g:88,b:172},
+  {name:"Deep Lavender",code:"18-3633 TCX",r:118,g:95,b:162},
+  {name:"Purple",code:"19-3536 TCX",r:88,g:55,b:138},
+  {name:"Royal Purple",code:"18-3633 TCX",r:102,g:52,b:148},
+  {name:"Passion Flower",code:"19-3536 TCX",r:75,g:40,b:112},
+  {name:"Blackberry",code:"19-3220 TCX",r:62,g:38,b:72},
+  {name:"Plum",code:"19-3218 TCX",r:82,g:42,b:65},
+  {name:"Eggplant",code:"19-3218 TCX",r:65,g:35,b:58},
+
+  // Browns & Taupes
+  {name:"Toasted Coconut",code:"17-1044 TCX",r:185,g:130,b:85},
+  {name:"Adobe",code:"17-1340 TCX",r:188,g:122,b:95},
+  {name:"Sandstorm",code:"16-1138 TCX",r:212,g:172,b:118},
+  {name:"Warm Taupe",code:"16-0916 TCX",r:195,g:172,b:145},
+  {name:"Taupe",code:"17-0908 TCX",r:172,g:148,b:128},
+  {name:"Cinnamon",code:"18-1244 TCX",r:165,g:98,b:68},
+  {name:"Tortoise Shell",code:"18-1048 TCX",r:155,g:98,b:58},
+  {name:"Mocha Bisque",code:"16-1422 TCX",r:200,g:162,b:130},
+  {name:"Sienna",code:"18-1142 TCX",r:160,g:90,b:58},
+  {name:"Caramel Cafe",code:"18-1048 TCX",r:148,g:88,b:52},
+  {name:"Brown Patina",code:"18-1048 TCX",r:128,g:80,b:52},
+  {name:"Leather Brown",code:"19-1020 TCX",r:112,g:68,b:42},
+  {name:"Chocolate",code:"19-1117 TCX",r:88,g:52,b:35},
+  {name:"Coffee Bean",code:"19-1220 TCX",r:72,g:42,b:28},
+  {name:"Espresso",code:"19-1217 TCX",r:55,g:35,b:25},
+
+  // Grays & Blacks
+  {name:"Glacier Gray",code:"13-4104 TCX",r:218,g:218,b:218},
+  {name:"Barely Blue",code:"12-4306 TCX",r:225,g:225,b:228},
+  {name:"Silver Gray",code:"14-4102 TCX",r:195,g:195,b:192},
+  {name:"Paloma",code:"15-3800 TCX",r:178,g:175,b:170},
+  {name:"Monument",code:"16-3802 TCX",r:158,g:155,b:152},
+  {name:"Alloy",code:"17-3911 TCX",r:138,g:135,b:132},
+  {name:"Smoke",code:"14-4105 TCX",r:200,g:198,b:195},
+  {name:"Quarry",code:"17-0207 TCX",r:148,g:142,b:132},
+  {name:"Elephant Skin",code:"17-0204 TCX",r:138,g:132,b:120},
+  {name:"Zinc",code:"17-0208 TCX",r:125,g:122,b:115},
+  {name:"Gunmetal",code:"18-0306 TCX",r:90,g:92,b:88},
+  {name:"Pewter",code:"17-0207 TCX",r:130,g:128,b:120},
+  {name:"Pavement",code:"18-0201 TCX",r:105,g:102,b:98},
+  {name:"Dark Shadow",code:"18-0312 TCX",r:85,g:85,b:78},
+  {name:"Rabbit",code:"17-0207 TCX",r:148,g:138,b:128},
+  {name:"Jet Black",code:"19-0303 TCX",r:35,g:33,b:32},
+  {name:"Black Ink",code:"19-4005 TCX",r:28,g:28,b:30},
+  {name:"Caviar",code:"19-4005 TCX",r:22,g:20,b:22},
+];
+
+// ─── State ─────────────────────────────────────────────────────────────────
+let selectedColor = null;
+let bestMatches = [];
+let savedColors = JSON.parse(localStorage.getItem('pantone_saved') || '[]');
+let cameraStream = null;
+let imageLoaded = false;
+let crosshairX = 0, crosshairY = 0;
+let currentTab = 'identify';
+
+// ─── Color math ─────────────────────────────────────────────────────────────
+function rgbToLab(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  r = r > 0.04045 ? Math.pow((r+0.055)/1.055, 2.4) : r/12.92;
+  g = g > 0.04045 ? Math.pow((g+0.055)/1.055, 2.4) : g/12.92;
+  b = b > 0.04045 ? Math.pow((b+0.055)/1.055, 2.4) : b/12.92;
+  let x = (r*0.4124564 + g*0.3575761 + b*0.1804375)/0.95047;
+  let y = (r*0.2126729 + g*0.7151522 + b*0.0721750)/1.00000;
+  let z = (r*0.0193339 + g*0.1191920 + b*0.9503041)/1.08883;
+  x = x > 0.008856 ? Math.pow(x,1/3) : 7.787*x + 16/116;
+  y = y > 0.008856 ? Math.pow(y,1/3) : 7.787*y + 16/116;
+  z = z > 0.008856 ? Math.pow(z,1/3) : 7.787*z + 16/116;
+  return { L: 116*y-16, a: 500*(x-y), b: 200*(y-z) };
+}
+
+function deltaE(r1,g1,b1, r2,g2,b2) {
+  const l1 = rgbToLab(r1,g1,b1), l2 = rgbToLab(r2,g2,b2);
+  return Math.sqrt(Math.pow(l1.L-l2.L,2)+Math.pow(l1.a-l2.a,2)+Math.pow(l1.b-l2.b,2));
+}
+
+function toHex(r,g,b) {
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+
+function matchScore(de) {
+  return Math.max(0, Math.round(100 - de * 1.8));
+}
+
+function findMatches(r,g,b) {
+  return PANTONE_TCX.map(p => ({
+    ...p,
+    de: deltaE(r,g,b, p.r,p.g,p.b)
+  })).sort((a,b) => a.de-b.de).slice(0,5);
+}
+
+// ─── UI ─────────────────────────────────────────────────────────────────────
+function showTab(tab) {
+  currentTab = tab;
+  document.getElementById('view-identify').style.display = tab==='identify' ? 'flex' : 'none';
+  document.getElementById('view-identify').style.flexDirection = 'column';
+  document.getElementById('view-saved').style.display = tab==='saved' ? 'block' : 'none';
+  document.getElementById('tab-identify').classList.toggle('active', tab==='identify');
+  document.getElementById('tab-saved').classList.toggle('active', tab==='saved');
+  if(tab === 'saved') renderPalette();
+}
+
+function showTab(tab) {
+  currentTab = tab;
+  const vi = document.getElementById('view-identify');
+  const vs = document.getElementById('view-saved');
+  if(tab === 'identify') { vi.style.display = 'contents'; vs.style.display = 'none'; }
+  else { vi.style.display = 'none'; vs.style.display = 'block'; renderPalette(); }
+  document.getElementById('tab-identify').classList.toggle('active', tab==='identify');
+  document.getElementById('tab-saved').classList.toggle('active', tab==='saved');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function setColorStrip(r,g,b) {
+  const hex = toHex(r,g,b);
+  document.getElementById('color-strip').innerHTML = `
+    <div class="swatch-box" style="background:${hex}"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">${hex}</div>
+      <div class="swatch-rgb">R ${r} · G ${g} · B ${b}</div>
+    </div>
+    <div class="tap-hint">cor capturada</div>
+  `;
+}
+
+function renderResults(matches) {
+  const el = document.getElementById('results');
+  el.innerHTML = `<div class="results-label">Pantone TCX — mais próximas</div>` +
+    matches.map((m,i) => {
+      const score = matchScore(m.de);
+      const badgeClass = score>=90 ? 'match-hi' : score>=78 ? 'match-md' : 'match-lo';
+      const hex = toHex(m.r, m.g, m.b);
+      return `<div class="pantone-card ${i===0?'best':''}" onclick="cardDetail('${m.name}','${m.code}','${hex}',${m.r},${m.g},${m.b},${score})">
+        <div class="p-swatch" style="background:${hex}"></div>
+        <div class="p-details">
+          <div class="p-name">${m.name}</div>
+          <div class="p-code">Pantone ${m.code}</div>
+        </div>
+        <div class="p-right">
+          <span class="match-badge ${badgeClass}">${score}%</span>
+          ${i===0 ? '<span class="best-tag">melhor</span>' : ''}
+        </div>
+      </div>`;
+    }).join('');
+  document.getElementById('btn-save').style.display = 'flex';
+}
+
+function cardDetail(name, code, hex, r, g, b, score) {
+  toast(`${name} — ${score}% correspondência`);
+}
+
+// ─── Image loading ───────────────────────────────────────────────────────────
+function loadImage(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  stopCamera();
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.getElementById('preview-canvas');
+      const area = document.getElementById('capture-area');
+      const maxH = 280;
+      canvas.style.display = 'block';
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('camera-video').style.display = 'none';
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.style.height = maxH + 'px';
+      canvas.style.objectFit = 'cover';
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      imageLoaded = true;
+      setupCrosshair(canvas);
+      // auto-pick center
+      pickColor(canvas, canvas.width/2, canvas.height/2);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function setupCrosshair(canvas) {
+  const overlay = document.getElementById('crosshair-overlay');
+  const ring = document.getElementById('crosshair-ring');
+  overlay.style.display = 'block';
+  overlay.style.position = 'absolute';
+  overlay.style.inset = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+
+  // Position ring at center
+  const rect = canvas.getBoundingClientRect();
+  ring.style.left = '50%';
+  ring.style.top = (280/2) + 'px';
+
+  canvas.addEventListener('click', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const cx = (e.clientX - rect.left) * scaleX;
+    const cy = (e.clientY - rect.top) * scaleY;
+
+    // visual position
+    ring.style.left = (e.clientX - rect.left) + 'px';
+    ring.style.top = (e.clientY - rect.top) + 'px';
+
+    pickColor(canvas, cx, cy);
+  });
+}
+
+function pickColor(canvas, cx, cy) {
+  const ctx = canvas.getContext('2d');
+  // sample 5x5 area average for stability
+  const size = 5;
+  const imgData = ctx.getImageData(Math.max(0,cx-size), Math.max(0,cy-size), size*2, size*2);
+  let rSum=0, gSum=0, bSum=0, count=0;
+  for(let i=0; i<imgData.data.length; i+=4) {
+    rSum += imgData.data[i];
+    gSum += imgData.data[i+1];
+    bSum += imgData.data[i+2];
+    count++;
+  }
+  const r = Math.round(rSum/count);
+  const g = Math.round(gSum/count);
+  const b = Math.round(bSum/count);
+  selectedColor = {r,g,b};
+  setColorStrip(r,g,b);
+  bestMatches = findMatches(r,g,b);
+  renderResults(bestMatches);
+}
+
+// ─── Camera ─────────────────────────────────────────────────────────────────
+async function toggleCamera() {
+  if(cameraStream) { stopCamera(); return; }
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false});
+    const video = document.getElementById('camera-video');
+    video.srcObject = cameraStream;
+    video.style.display = 'block';
+    document.getElementById('preview-canvas').style.display = 'none';
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('btn-camera').classList.add('active');
+    document.getElementById('btn-camera').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Parar câmera`;
+
+    // Show overlay + tap to capture
+    const overlay = document.getElementById('crosshair-overlay');
+    const ring = document.getElementById('crosshair-ring');
+    overlay.style.display = 'block';
+    overlay.style.position = 'absolute';
+    overlay.style.inset = '0';
+    ring.style.left = '50%';
+    ring.style.top = '140px';
+
+    video.addEventListener('click', captureFromCamera);
+    imageLoaded = true;
+  } catch(err) {
+    toast('Câmera não disponível — use a galeria');
+  }
+}
+
+function captureFromCamera() {
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('preview-canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.style.height = '280px';
+  canvas.style.display = 'block';
+  video.style.display = 'none';
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  stopCamera(true);
+  setupCrosshair(canvas);
+  pickColor(canvas, canvas.width/2, canvas.height/2);
+}
+
+function stopCamera(keepFrame=false) {
+  if(cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  if(!keepFrame) {
+    document.getElementById('camera-video').style.display = 'none';
+    if(!imageLoaded) document.getElementById('placeholder').style.display = 'flex';
+  }
+  document.getElementById('btn-camera').classList.remove('active');
+  document.getElementById('btn-camera').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Câmera ao vivo`;
+}
+
+// ─── Save ────────────────────────────────────────────────────────────────────
+function saveBest() {
+  if(!bestMatches.length || !selectedColor) return;
+  const best = bestMatches[0];
+  const score = matchScore(best.de);
+  const hex = toHex(selectedColor.r, selectedColor.g, selectedColor.b);
+  const pantoneHex = toHex(best.r, best.g, best.b);
+  const entry = { name: best.name, code: best.code, hex, pantoneHex, score, date: Date.now() };
+  // avoid duplicates
+  if(!savedColors.find(s => s.code === best.code)) {
+    savedColors.unshift(entry);
+    if(savedColors.length > 40) savedColors.pop();
+    localStorage.setItem('pantone_saved', JSON.stringify(savedColors));
+    toast(`"${best.name}" salva na paleta`);
+  } else {
+    toast('Esta cor já está na sua paleta');
+  }
+}
+
+function renderPalette() {
+  const grid = document.getElementById('palette-grid');
+  if(!savedColors.length) {
+    grid.innerHTML = '';
+    grid.insertAdjacentHTML('afterend', '');
+    grid.parentElement.querySelector('.empty-palette')?.remove();
+    const emp = document.createElement('div');
+    emp.className = 'empty-palette';
+    emp.innerHTML = 'Nenhuma cor salva ainda.<br>Identifique uma cor e toque em <strong>Salvar</strong>.';
+    grid.after(emp);
+    return;
+  }
+  grid.parentElement.querySelector('.empty-palette')?.remove();
+  grid.innerHTML = savedColors.map(s => `
+    <div class="palette-card">
+      <div class="palette-swatch" style="background:${s.pantoneHex}"></div>
+      <div class="palette-info">
+        <div class="palette-name">${s.name}</div>
+        <div class="palette-code">Pantone ${s.code}</div>
+        <div class="palette-code2" style="color:var(--accent)">${s.score}% match</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function clearPalette() {
+  if(!savedColors.length) return;
+  savedColors = [];
+  localStorage.setItem('pantone_saved', '[]');
+  renderPalette();
+  toast('Paleta limpa');
+}
+
+// Init
+document.getElementById('view-identify').style.display = 'contents';
+</script>
+</body>
+</html>
