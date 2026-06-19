@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Pantone Finder — Moda Têxtil</title>
+<title>ColorNome — Identificador de Cores</title>
 <style>
   :root {
     --bg: #0f0f0f;
@@ -11,7 +11,7 @@
     --surface2: #242424;
     --surface3: #2e2e2e;
     --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
+    --border2: rgba(255,255,255,0.16);
     --text: #f0f0f0;
     --text2: rgba(255,255,255,0.55);
     --text3: rgba(255,255,255,0.3);
@@ -24,103 +24,100 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; overflow-x: hidden; }
-
-  #app { max-width: 420px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+  #app { max-width: 430px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
 
   /* Header */
-  .header { padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border); }
-  .header-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+  .header { padding: 14px 18px 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border); background: var(--bg); }
+  .header-title { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+  .header-title span { color: var(--accent); }
   .header-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
-  .history-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface2); border: 0.5px solid var(--border2); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); font-size: 16px; }
+  .palette-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface2); border: 0.5px solid var(--border2); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); }
 
-  /* Tab bar */
-  .tabs { display: flex; gap: 0; background: var(--surface); border-bottom: 0.5px solid var(--border); }
+  /* Tabs */
+  .tabs { display: flex; background: var(--surface); border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
   .tab { flex: 1; padding: 11px 0; text-align: center; font-size: 13px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
 
-  /* Camera / upload area */
+  /* Capture */
   .capture-area { position: relative; background: #000; overflow: hidden; flex-shrink: 0; }
-  .capture-area canvas, .capture-area video, .capture-area img { display: block; width: 100%; }
-  #preview-canvas { width: 100%; height: 280px; object-fit: cover; cursor: crosshair; }
-  #camera-video { width: 100%; height: 280px; object-fit: cover; display: none; }
-  .placeholder { width: 100%; height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: var(--surface); cursor: pointer; }
-  .placeholder-icon { font-size: 40px; opacity: 0.25; }
-  .placeholder-text { font-size: 14px; color: var(--text3); }
-  .placeholder-hint { font-size: 12px; color: var(--text3); opacity: .6; }
+  #preview-canvas { width: 100%; height: 270px; display: none; cursor: crosshair; object-fit: cover; }
+  #camera-video { width: 100%; height: 270px; display: none; object-fit: cover; }
+  .placeholder { width: 100%; height: 270px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: var(--surface); cursor: pointer; border-bottom: 0.5px solid var(--border); }
+  .ph-icon { font-size: 36px; opacity: .2; }
+  .ph-text { font-size: 14px; color: var(--text3); }
+  .ph-hint { font-size: 11px; color: var(--text3); opacity: .5; }
 
-  /* Crosshair overlay */
-  .crosshair-overlay { position: absolute; pointer-events: none; }
-  .crosshair-ring { position: absolute; border: 2.5px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 1px rgba(0,0,0,0.6); transition: left .1s, top .1s; }
-  .crosshair-ring::before, .crosshair-ring::after { content: ''; position: absolute; background: rgba(255,255,255,0.8); }
-  .crosshair-ring::before { width: 1px; height: 200%; left: 50%; top: -50%; transform: translateX(-50%); }
-  .crosshair-ring::after { height: 1px; width: 200%; top: 50%; left: -50%; transform: translateY(-50%); }
+  /* Crosshair */
+  #crosshair-overlay { position: absolute; inset: 0; pointer-events: none; display: none; }
+  #crosshair-ring { position: absolute; width: 60px; height: 60px; border: 2.5px solid #fff; border-radius: 50%; transform: translate(-50%,-50%); box-shadow: 0 0 0 1.5px rgba(0,0,0,0.5); transition: left .08s, top .08s; }
+  #crosshair-ring::before { content:''; position:absolute; width:1px; height:90px; left:50%; top:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.7); }
+  #crosshair-ring::after { content:''; position:absolute; height:1px; width:90px; left:50%; top:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.7); }
 
-  /* Controls row */
-  .controls { display: flex; gap: 8px; padding: 10px 16px; background: var(--surface); border-bottom: 0.5px solid var(--border); align-items: center; }
-  .ctrl-btn { flex: 1; padding: 8px 10px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: var(--surface2); color: var(--text2); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: background .15s; white-space: nowrap; }
-  .ctrl-btn:hover { background: var(--surface3); }
-  .ctrl-btn.active { border-color: var(--accent); color: var(--accent); }
-  .ctrl-btn svg { flex-shrink: 0; }
+  /* Controls */
+  .controls { display:flex; gap:7px; padding:9px 14px; background:var(--surface); border-bottom:0.5px solid var(--border); }
+  .ctrl-btn { flex:1; padding:8px 6px; border-radius:var(--radius-sm); border:0.5px solid var(--border2); background:var(--surface2); color:var(--text2); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; transition:background .15s; white-space:nowrap; }
+  .ctrl-btn.active { border-color:var(--accent); color:var(--accent); }
+  .save-btn { background:var(--accent); color:#1a0f00; border:none; border-radius:var(--radius-sm); padding:8px 14px; font-size:12px; font-weight:600; cursor:pointer; display:none; align-items:center; gap:5px; white-space:nowrap; flex-shrink:0; }
 
-  /* Selected color strip */
-  .color-strip { padding: 12px 16px; display: flex; align-items: center; gap: 12px; background: var(--surface); border-bottom: 0.5px solid var(--border); }
-  .swatch-box { width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.12); }
-  .swatch-info { flex: 1; }
-  .swatch-hex { font-size: 15px; font-weight: 600; letter-spacing: .5px; }
-  .swatch-rgb { font-size: 11px; color: var(--text3); margin-top: 2px; }
-  .swatch-empty { font-size: 13px; color: var(--text3); }
-  .tap-hint { font-size: 11px; color: var(--text3); background: var(--surface2); padding: 4px 10px; border-radius: 20px; }
+  /* Color strip */
+  .color-strip { padding:11px 14px; display:flex; align-items:center; gap:11px; background:var(--surface); border-bottom:0.5px solid var(--border); min-height:66px; }
+  .swatch-box { width:44px; height:44px; border-radius:10px; flex-shrink:0; border:1px solid rgba(255,255,255,0.1); }
+  .swatch-hex { font-size:15px; font-weight:600; letter-spacing:.4px; }
+  .swatch-rgb { font-size:11px; color:var(--text3); margin-top:2px; }
+  .swatch-empty { font-size:12px; color:var(--text3); line-height:1.5; }
+  .tap-badge { font-size:11px; color:var(--text3); background:var(--surface2); padding:3px 9px; border-radius:20px; margin-left:auto; }
+
+  /* Filter chips */
+  .filter-row { padding:10px 14px 8px; display:flex; gap:6px; overflow-x:auto; flex-shrink:0; background:var(--bg); border-bottom:0.5px solid var(--border); scrollbar-width:none; }
+  .filter-row::-webkit-scrollbar { display:none; }
+  .chip { padding:5px 11px; border-radius:20px; border:0.5px solid var(--border2); font-size:11.5px; color:var(--text2); cursor:pointer; white-space:nowrap; transition:all .18s; flex-shrink:0; display:flex; align-items:center; gap:5px; }
+  .chip.on { border-color:transparent; color:#111; font-weight:500; }
+  .chip-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
   /* Results */
-  .results { flex: 1; overflow-y: auto; padding: 12px 16px 24px; }
-  .results-label { font-size: 11px; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px; margin-top: 4px; }
-  .pantone-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; transition: border-color .2s; cursor: pointer; }
-  .pantone-card:hover { border-color: var(--border2); }
-  .pantone-card.best { border-color: rgba(232,180,90,0.4); background: rgba(232,180,90,0.05); }
-  .p-swatch { width: 40px; height: 40px; border-radius: 9px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.08); }
-  .p-details { flex: 1; min-width: 0; }
-  .p-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .p-code { font-size: 11px; color: var(--text3); margin-top: 2px; }
-  .p-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-  .match-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
-  .match-hi { background: var(--green-dim); color: var(--green); }
-  .match-md { background: rgba(232,180,90,0.15); color: var(--accent); }
-  .match-lo { background: rgba(255,255,255,0.06); color: var(--text3); }
-  .best-tag { font-size: 10px; color: var(--accent); }
+  .results { flex:1; overflow-y:auto; padding:10px 14px 28px; }
+  .results-label { font-size:11px; color:var(--text3); letter-spacing:.06em; text-transform:uppercase; margin-bottom:9px; }
+  .no-filter { padding:30px 20px; text-align:center; color:var(--text3); font-size:13px; line-height:1.7; }
+  .pantone-card { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius); padding:11px 13px; display:flex; align-items:center; gap:11px; margin-bottom:7px; cursor:default; }
+  .pantone-card.best { border-color:rgba(232,180,90,0.4); background:rgba(232,180,90,0.04); }
+  .p-swatch { width:40px; height:40px; border-radius:9px; flex-shrink:0; border:1px solid rgba(255,255,255,0.07); }
+  .p-details { flex:1; min-width:0; }
+  .p-name { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .p-meta { font-size:11px; color:var(--text3); margin-top:2px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .cat-badge { font-size:10px; padding:1px 6px; border-radius:10px; font-weight:500; }
+  .p-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+  .match-badge { font-size:11px; font-weight:600; padding:3px 8px; border-radius:20px; }
+  .match-hi { background:var(--green-dim); color:var(--green); }
+  .match-md { background:rgba(232,180,90,0.15); color:var(--accent); }
+  .match-lo { background:rgba(255,255,255,0.06); color:var(--text3); }
+  .best-tag { font-size:10px; color:var(--accent); }
 
-  /* Saved palette */
-  .palette-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .palette-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .palette-swatch { height: 80px; }
-  .palette-info { padding: 10px 12px; }
-  .palette-name { font-size: 12px; font-weight: 500; }
-  .palette-code { font-size: 11px; color: var(--text3); }
-  .palette-code2 { font-size: 10px; color: var(--text3); margin-top: 1px; }
-  .empty-palette { padding: 40px 20px; text-align: center; color: var(--text3); font-size: 13px; line-height: 1.7; }
+  /* Palette tab */
+  #view-saved { display:none; flex:1; overflow-y:auto; padding:14px; }
+  .palette-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .pal-card { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .pal-swatch { height:72px; }
+  .pal-info { padding:9px 11px; }
+  .pal-name { font-size:12px; font-weight:500; }
+  .pal-code { font-size:10.5px; color:var(--text3); margin-top:1px; }
+  .pal-cat { font-size:10px; margin-top:3px; padding:1px 6px; border-radius:10px; display:inline-block; }
+  .empty-pal { padding:50px 20px; text-align:center; color:var(--text3); font-size:13px; line-height:1.8; }
 
-  .save-btn { background: var(--accent); color: #1a0f00; border: none; border-radius: 10px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-
-  /* Toast */
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface3); border: 0.5px solid var(--border2); color: var(--text); font-size: 13px; padding: 10px 18px; border-radius: 24px; pointer-events: none; opacity: 0; transition: opacity .3s; z-index: 100; white-space: nowrap; }
-  .toast.show { opacity: 1; }
-
-  input[type=file] { display: none; }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+  .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:var(--surface3); border:0.5px solid var(--border2); color:var(--text); font-size:13px; padding:9px 18px; border-radius:24px; pointer-events:none; opacity:0; transition:opacity .3s; z-index:100; white-space:nowrap; }
+  .toast.show { opacity:1; }
+  input[type=file] { display:none; }
+  ::-webkit-scrollbar { width:3px; } ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
 </style>
 </head>
 <body>
 <div id="app">
   <div class="header">
     <div>
-      <div class="header-title">Pantone Finder</div>
-      <div class="header-sub">Catálogo Têxtil (TCX)</div>
+      <div class="header-title">Color<span>Nome</span></div>
+      <div class="header-sub">Identifique e nomeie qualquer cor</div>
     </div>
-    <button class="history-btn" onclick="showTab('saved')" title="Paleta salva">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <button class="palette-btn" onclick="showTab('saved')" title="Minha paleta">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
     </button>
   </div>
 
@@ -129,49 +126,47 @@
     <div class="tab" id="tab-saved" onclick="showTab('saved')">Minha paleta</div>
   </div>
 
-  <!-- IDENTIFY TAB -->
   <div id="view-identify">
     <div class="capture-area" id="capture-area">
       <div class="placeholder" id="placeholder" onclick="document.getElementById('file-input').click()">
-        <div class="placeholder-icon">📷</div>
-        <div class="placeholder-text">Toque para escolher uma foto</div>
-        <div class="placeholder-hint">ou use a câmera ao vivo</div>
+        <div class="ph-icon">📷</div>
+        <div class="ph-text">Toque para escolher uma foto</div>
+        <div class="ph-hint">ou ative a câmera ao vivo abaixo</div>
       </div>
-      <canvas id="preview-canvas" style="display:none"></canvas>
+      <canvas id="preview-canvas"></canvas>
       <video id="camera-video" autoplay playsinline muted></video>
-      <div class="crosshair-overlay" id="crosshair-overlay" style="display:none">
-        <div class="crosshair-ring" id="crosshair-ring" style="width:56px;height:56px;left:50%;top:50%"></div>
-      </div>
+      <div id="crosshair-overlay"><div id="crosshair-ring"></div></div>
     </div>
 
     <div class="controls">
-      <button class="ctrl-btn" id="btn-gallery" onclick="document.getElementById('file-input').click()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      <button class="ctrl-btn" onclick="document.getElementById('file-input').click()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
         Galeria
       </button>
       <button class="ctrl-btn" id="btn-camera" onclick="toggleCamera()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        Câmera ao vivo
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Câmera
       </button>
-      <button class="save-btn" id="btn-save" onclick="saveBest()" style="display:none">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+      <button class="save-btn" id="btn-save" onclick="saveBest()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
         Salvar
       </button>
     </div>
 
     <div class="color-strip" id="color-strip">
-      <div class="swatch-empty">Selecione uma imagem e toque na cor que deseja identificar</div>
+      <div class="swatch-empty">Escolha uma imagem e toque na cor que deseja identificar</div>
     </div>
 
-    <div class="results" id="results">
-    </div>
+    <!-- Filter chips -->
+    <div class="filter-row" id="filter-row"></div>
+
+    <div class="results" id="results"></div>
   </div>
 
-  <!-- SAVED TAB -->
-  <div id="view-saved" style="display:none; padding:16px; flex:1; overflow-y:auto">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px">
-      <div class="results-label" style="margin:0">Cores salvas</div>
-      <button onclick="clearPalette()" style="font-size:11px; color:var(--text3); background:none; border:none; cursor:pointer">Limpar tudo</button>
+  <div id="view-saved">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Cores salvas</div>
+      <button onclick="clearPalette()" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer">Limpar tudo</button>
     </div>
     <div class="palette-grid" id="palette-grid"></div>
   </div>
@@ -181,481 +176,538 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── Pantone TCX Database (curated 120 cores para moda) ───────────────────
-const PANTONE_TCX = [
-  // Whites & Neutrals
-  {name:"Bright White",code:"11-0601 TCX",r:242,g:242,b:238},
-  {name:"Snow White",code:"11-0602 TCX",r:237,g:237,b:232},
-  {name:"Blanc de Blanc",code:"11-0907 TCX",r:238,g:234,b:220},
-  {name:"Vanilla Custard",code:"12-0712 TCX",r:240,g:228,b:196},
-  {name:"Almond Milk",code:"12-0304 TCX",r:229,g:220,b:205},
-  {name:"Antique White",code:"12-0104 TCX",r:230,g:222,b:210},
-  {name:"Ivory",code:"11-0105 TCX",r:245,g:240,b:225},
-  {name:"Ecru",code:"12-0712 TCX",r:237,g:224,b:195},
-  {name:"Natural",code:"13-0002 TCX",r:220,g:210,b:195},
-  {name:"Parchment",code:"13-1015 TCX",r:220,g:205,b:180},
-  {name:"Sand",code:"14-1118 TCX",r:210,g:190,b:160},
-  {name:"Warm Sand",code:"14-1120 TCX",r:205,g:180,b:148},
-  {name:"Beige",code:"13-1008 TCX",r:215,g:200,b:178},
-  {name:"Oatmeal",code:"13-0002 TCX",r:210,g:198,b:180},
-  {name:"Linen",code:"12-0108 TCX",r:228,g:218,b:200},
-  {name:"Cream",code:"11-0110 TCX",r:242,g:232,b:210},
+// ═══════════════════════════════════════════════════════════
+//  CATEGORIAS & CORES
+// ═══════════════════════════════════════════════════════════
+const CATS = {
+  pantone:  { label: 'Pantone TCX',        color: '#e8b45a', bg: 'rgba(232,180,90,0.18)'  },
+  nature:   { label: 'Natureza',            color: '#5ec396', bg: 'rgba(94,195,150,0.18)'  },
+  geo:      { label: 'Origem Geográfica',   color: '#60aaee', bg: 'rgba(96,170,238,0.18)'  },
+  history:  { label: 'Histórico',           color: '#c080e8', bg: 'rgba(192,128,232,0.18)' },
+  people:   { label: 'Pessoas & Cultura',   color: '#f07878', bg: 'rgba(240,120,120,0.18)' },
+  industry: { label: 'Indústria & Marketing', color: '#78c8f0', bg: 'rgba(120,200,240,0.18)' },
+};
 
-  // Pinks & Roses
-  {name:"Fairy Tale",code:"12-2103 TCX",r:245,g:215,b:218},
-  {name:"Blushing Bride",code:"13-2010 TCX",r:240,g:202,b:202},
-  {name:"Crystal Rose",code:"14-1911 TCX",r:230,g:182,b:178},
-  {name:"Peach Blush",code:"14-1513 TCX",r:240,g:190,b:170},
-  {name:"Candy Pink",code:"15-1920 TCX",r:235,g:160,b:155},
-  {name:"Flamingo Pink",code:"15-1920 TCX",r:238,g:148,b:138},
-  {name:"Aurora",code:"14-1911 TCX",r:244,g:196,b:190},
-  {name:"Ballet Slipper",code:"14-1905 TCX",r:235,g:200,b:195},
-  {name:"Rose Quartz",code:"13-1520 TCX",r:247,g:202,b:201},
-  {name:"Orchid Pink",code:"14-1714 TCX",r:232,g:178,b:184},
-  {name:"Cameo Rose",code:"16-1723 TCX",r:220,g:155,b:148},
-  {name:"Rosewood",code:"17-1512 TCX",r:185,g:125,b:118},
-  {name:"Dusty Rose",code:"16-1610 TCX",r:196,g:155,b:148},
-  {name:"Antique Rose",code:"17-1718 TCX",r:185,g:130,b:122},
-  {name:"Mauve",code:"17-1612 TCX",r:178,g:130,b:130},
-  {name:"Pale Mauve",code:"15-1607 TCX",r:215,g:185,b:180},
-  {name:"Mellow Rose",code:"15-1614 TCX",r:222,g:175,b:168},
-  {name:"Quartz Pink",code:"15-1920 TCX",r:228,g:170,b:162},
-  {name:"Hot Coral",code:"17-1547 TCX",r:235,g:100,b:88},
-  {name:"Living Coral",code:"16-1546 TCX",r:255,g:111,b:97},
-  {name:"Coral",code:"16-1540 TCX",r:248,g:125,b:102},
-  {name:"Peach Cobbler",code:"16-1435 TCX",r:240,g:155,b:120},
+// Each entry: name, code (display), r, g, b, cat, origin (tooltip)
+const COLORS = [
+// ── PANTONE TCX ──────────────────────────────────────────
+{name:"Bright White",     code:"11-0601 TCX", r:242,g:242,b:238, cat:"pantone", origin:"Pantone Fashion, Home & Interiors"},
+{name:"Snow White",       code:"11-0602 TCX", r:237,g:237,b:232, cat:"pantone", origin:"Pantone Fashion, Home & Interiors"},
+{name:"Ivory",            code:"11-0105 TCX", r:245,g:240,b:225, cat:"pantone", origin:"Pantone Fashion, Home & Interiors"},
+{name:"Vanilla Custard",  code:"12-0712 TCX", r:240,g:228,b:196, cat:"pantone", origin:"Pantone Fashion, Home & Interiors"},
+{name:"Almond Milk",      code:"12-0304 TCX", r:229,g:220,b:205, cat:"pantone", origin:"Pantone Fashion, Home & Interiors"},
+{name:"Ecru",             code:"12-0712 TCX", r:237,g:224,b:195, cat:"pantone", origin:"Pantone Fashion, Home & Interiors"},
+{name:"Linen",            code:"12-0108 TCX", r:228,g:218,b:200, cat:"pantone", origin:"Pantone Fashion, Home & Interiors"},
+{name:"Parchment",        code:"13-1015 TCX", r:220,g:205,b:180, cat:"pantone", origin:"Pantone Fashion, Home & Interiors"},
+{name:"Sand",             code:"14-1118 TCX", r:210,g:190,b:160, cat:"pantone", origin:"Pantone Fashion, Home & Interiors"},
+{name:"Warm Taupe",       code:"16-0916 TCX", r:195,g:172,b:145, cat:"pantone", origin:"Pantone Fashion, Home & Interiors"},
+{name:"Taupe",            code:"17-0908 TCX", r:172,g:148,b:128, cat:"pantone", origin:"Pantone Fashion, Home & Interiors"},
+{name:"Rose Quartz",      code:"13-1520 TCX", r:247,g:202,b:201, cat:"pantone", origin:"Pantone Cor do Ano 2016"},
+{name:"Serenity",         code:"15-3913 TCX", r:146,g:168,b:208, cat:"pantone", origin:"Pantone Cor do Ano 2016"},
+{name:"Greenery",         code:"15-0343 TCX", r:136,g:176,b:75,  cat:"pantone", origin:"Pantone Cor do Ano 2017"},
+{name:"Ultra Violet",     code:"18-3838 TCX", r:95, g:75, b:139, cat:"pantone", origin:"Pantone Cor do Ano 2018"},
+{name:"Living Coral",     code:"16-1546 TCX", r:255,g:111,b:97,  cat:"pantone", origin:"Pantone Cor do Ano 2019"},
+{name:"Classic Blue",     code:"19-4052 TCX", r:15, g:76, b:129, cat:"pantone", origin:"Pantone Cor do Ano 2020"},
+{name:"Illuminating",     code:"13-0858 TCX", r:250,g:210,b:75,  cat:"pantone", origin:"Pantone Cor do Ano 2021"},
+{name:"Very Peri",        code:"17-3938 TCX", r:102,g:103,b:171, cat:"pantone", origin:"Pantone Cor do Ano 2022"},
+{name:"Viva Magenta",     code:"18-1750 TCX", r:187,g:38, b:73,  cat:"pantone", origin:"Pantone Cor do Ano 2023"},
+{name:"Peach Fuzz",       code:"13-1023 TCX", r:255,g:190,b:152, cat:"pantone", origin:"Pantone Cor do Ano 2024"},
+{name:"Mocha Mousse",     code:"17-1230 TCX", r:169,g:127,b:105, cat:"pantone", origin:"Pantone Cor do Ano 2025"},
+{name:"Flamingo Pink",    code:"15-1920 TCX", r:238,g:148,b:138, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Dusty Rose",       code:"16-1610 TCX", r:196,g:155,b:148, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Mauve",            code:"17-1612 TCX", r:178,g:130,b:130, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Burgundy",         code:"19-1617 TCX", r:130,g:42, b:52,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"True Red",         code:"19-1664 TCX", r:185,g:28, b:40,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Chili Pepper",     code:"19-1557 TCX", r:162,g:35, b:42,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Tangerine",        code:"15-1157 TCX", r:248,g:145,b:78,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Saffron",          code:"15-1150 TCX", r:245,g:162,b:60,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Amber Gold",       code:"14-0941 TCX", r:232,g:180,b:90,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Honey Gold",       code:"15-1062 TCX", r:210,g:158,b:58,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Caramel",          code:"15-1239 TCX", r:210,g:158,b:98,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Sienna",           code:"18-1142 TCX", r:160,g:90, b:58,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Chocolate",        code:"19-1117 TCX", r:88, g:52, b:35,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Foliage",          code:"17-0535 TCX", r:110,g:155,b:68,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Fern",             code:"17-0230 TCX", r:98, g:148,b:85,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Jade Green",       code:"16-0237 TCX", r:88, g:162,b:100, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Hunter Green",     code:"19-0419 TCX", r:45, g:80, b:55,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Aqua Sky",         code:"13-4411 TCX", r:140,g:218,b:215, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Turquoise",        code:"15-5519 TCX", r:62, g:192,b:188, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Cerulean",         code:"15-4020 TCX", r:130,g:180,b:218, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Navy Peony",       code:"19-4340 TCX", r:22, g:48, b:95,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Midnight Blue",    code:"19-3943 TCX", r:25, g:38, b:90,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Lavender",         code:"13-3820 TCX", r:200,g:190,b:225, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Amethyst",         code:"17-3628 TCX", r:148,g:112,b:188, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Eggplant",         code:"19-3218 TCX", r:65, g:35, b:58,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Silver Gray",      code:"14-4102 TCX", r:195,g:195,b:192, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Alloy",            code:"17-3911 TCX", r:138,g:135,b:132, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Jet Black",        code:"19-0303 TCX", r:35, g:33, b:32,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Sage",             code:"16-0220 TCX", r:155,g:170,b:138, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Mint",             code:"13-0220 TCX", r:172,g:230,b:190, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Seafoam",          code:"13-0117 TCX", r:175,g:222,b:200, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Orchid",           code:"14-3411 TCX", r:192,g:172,b:215, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Wisteria",         code:"16-3810 TCX", r:162,g:145,b:195, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Scarlet",          code:"18-1664 TCX", r:198,g:40, b:50,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Coral",            code:"16-1540 TCX", r:248,g:125,b:102, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Peach Blush",      code:"14-1513 TCX", r:240,g:190,b:170, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Chartreuse",       code:"13-0545 TCX", r:215,g:232,b:80,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Meadow",           code:"17-0145 TCX", r:80, g:148,b:70,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Forest",           code:"19-0230 TCX", r:45, g:92, b:52,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Steel Blue",       code:"17-4041 TCX", r:90, g:135,b:175, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Cornflower Blue",  code:"16-4132 TCX", r:115,g:158,b:212, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Estate Blue",      code:"19-3933 TCX", r:38, g:68, b:128, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Regatta",          code:"18-4245 TCX", r:40, g:115,b:175, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Pastel Lilac",     code:"12-3612 TCX", r:218,g:205,b:228, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Violet",           code:"18-3633 TCX", r:128,g:88, b:172, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Plum",             code:"19-3218 TCX", r:82, g:42, b:65,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Toasted Coconut",  code:"17-1044 TCX", r:185,g:130,b:85,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Cinnamon",         code:"18-1244 TCX", r:165,g:98, b:68,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Coffee Bean",      code:"19-1220 TCX", r:72, g:42, b:28,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Espresso",         code:"19-1217 TCX", r:55, g:35, b:25,  cat:"pantone", origin:"Pantone Fashion"},
+{name:"Pewter",           code:"17-0207 TCX", r:130,g:128,b:120, cat:"pantone", origin:"Pantone Fashion"},
+{name:"Gunmetal",         code:"18-0306 TCX", r:90, g:92, b:88,  cat:"pantone", origin:"Pantone Fashion"},
 
-  // Reds
-  {name:"Poppy Red",code:"18-1660 TCX",r:215,g:55,b:55},
-  {name:"Hibiscus",code:"18-1660 TCX",r:198,g:60,b:68},
-  {name:"Tomato",code:"18-1550 TCX",r:218,g:68,b:58},
-  {name:"Flame",code:"18-1550 TCX",r:220,g:85,b:60},
-  {name:"Scarlet",code:"18-1664 TCX",r:198,g:40,b:50},
-  {name:"True Red",code:"19-1664 TCX",r:185,g:28,b:40},
-  {name:"Chili Pepper",code:"19-1557 TCX",r:162,g:35,b:42},
-  {name:"Burgundy",code:"19-1617 TCX",r:130,g:42,b:52},
-  {name:"Biking Red",code:"19-1664 TCX",r:158,g:32,b:40},
-  {name:"Wine",code:"19-1629 TCX",r:118,g:38,b:50},
-  {name:"Port",code:"19-1622 TCX",r:105,g:40,b:48},
-  {name:"Deep Claret",code:"19-1528 TCX",r:100,g:35,b:45},
+// ── NATUREZA ────────────────────────────────────────────
+{name:"Céu Amanhecer",    code:"Aurora",      r:255,g:210,b:170, cat:"nature", origin:"Cor do céu no alvorecer, tons rosados e alaranjados"},
+{name:"Azul Céu",         code:"Sky Blue",    r:135,g:206,b:235, cat:"nature", origin:"Cor do céu claro ao meio-dia"},
+{name:"Azul Tempestade",  code:"Storm",       r:70, g:90, b:120, cat:"nature", origin:"Céu encoberto antes de tempestade"},
+{name:"Verde Floresta",   code:"Forest",      r:34, g:85, b:40,  cat:"nature", origin:"Folhagem densa de floresta tropical"},
+{name:"Verde Musgo",      code:"Moss",        r:90, g:110,b:72,  cat:"nature", origin:"Musgo úmido em pedras e troncos"},
+{name:"Verde Bambu",      code:"Bamboo",      r:122,g:160,b:90,  cat:"nature", origin:"Colmos jovens de bambu"},
+{name:"Amarelo Girassol", code:"Sunflower",   r:255,g:210,b:0,   cat:"nature", origin:"Pétala de girassol (Helianthus annuus)"},
+{name:"Vermelho Romã",    code:"Pomegranate", r:195,g:30, b:45,  cat:"nature", origin:"Casca e semente de romã madura"},
+{name:"Laranja Cenoura",  code:"Carrot",      r:235,g:115,b:38,  cat:"nature", origin:"Raiz de cenoura (Daucus carota)"},
+{name:"Amarelo Limão",    code:"Lemon",       r:252,g:242,b:100, cat:"nature", origin:"Casca de limão siciliano"},
+{name:"Verde Lima",       code:"Lime",        r:180,g:220,b:55,  cat:"nature", origin:"Casca de limão tahiti fresco"},
+{name:"Rosa Flamingo",    code:"Flamingo",    r:245,g:150,b:155, cat:"nature", origin:"Plumagem do flamingo (Phoenicopterus)"},
+{name:"Azul Mirtilo",     code:"Blueberry",   r:80, g:85, b:148, cat:"nature", origin:"Fruto maduro do mirtilo"},
+{name:"Roxo Lavanda",     code:"Lavender",    r:180,g:155,b:210, cat:"nature", origin:"Flores da planta Lavandula angustifolia"},
+{name:"Branco Magnólia",  code:"Magnolia",    r:248,g:242,b:228, cat:"nature", origin:"Pétalas da magnólia branca"},
+{name:"Rosa Peônia",      code:"Peony",       r:228,g:108,b:128, cat:"nature", origin:"Flor de peônia (Paeonia lactiflora)"},
+{name:"Amarelo Âmbar",    code:"Amber",       r:215,g:158,b:32,  cat:"nature", origin:"Resina fóssil âmbar translúcida"},
+{name:"Marrom Terra",     code:"Earth",       r:155,g:100,b:60,  cat:"nature", origin:"Terra argilosa avermelhada"},
+{name:"Cinza Pedra",      code:"Stone",       r:148,g:142,b:132, cat:"nature", origin:"Granito e pedra calcária"},
+{name:"Preto Carvão",     code:"Charcoal",    r:52, g:50, b:50,  cat:"nature", origin:"Carvão vegetal queimado"},
+{name:"Branco Neve",      code:"Snow",        r:250,g:250,b:252, cat:"nature", origin:"Neve fresca cristalizada"},
+{name:"Azul Oceano",      code:"Ocean",       r:0,  g:105,b:148, cat:"nature", origin:"Águas profundas do oceano Atlântico"},
+{name:"Verde Esmeralda",  code:"Emerald",     r:0,  g:155,b:108, cat:"nature", origin:"Pedra preciosa esmeralda (berilo verde)"},
+{name:"Azul Safira",      code:"Sapphire",    r:15, g:55, b:145, cat:"nature", origin:"Pedra preciosa safira natural"},
+{name:"Vermelho Rubi",    code:"Ruby",        r:155,g:17, b:30,  cat:"nature", origin:"Pedra preciosa rubi (corindo vermelho)"},
+{name:"Amarelo Topázio",  code:"Topaz",       r:230,g:185,b:80,  cat:"nature", origin:"Pedra preciosa topázio imperial"},
+{name:"Laranja Pôr do Sol",code:"Sunset",     r:250,g:130,b:60,  cat:"nature", origin:"Céu ao pôr do sol com nuvens"},
+{name:"Rosa Quartzo",     code:"Rose Quartz", r:248,g:210,b:205, cat:"nature", origin:"Mineral quartzo rosa translúcido"},
+{name:"Verde Jade",       code:"Jade",        r:0,  g:168,b:107, cat:"nature", origin:"Mineral jade nefritar da China"},
+{name:"Azul Turquesa",    code:"Turquoise",   r:38, g:188,b:182, cat:"nature", origin:"Mineral turquesa do Oriente Médio"},
+{name:"Marrom Mogno",     code:"Mahogany",    r:125,g:58, b:42,  cat:"nature", origin:"Madeira de mogno (Swietenia macrophylla)"},
+{name:"Bege Areia",       code:"Desert Sand", r:225,g:205,b:168, cat:"nature", origin:"Areia fina de deserto quente"},
+{name:"Verde Menta",      code:"Mint",        r:152,g:220,b:180, cat:"nature", origin:"Folha de hortelã (Mentha piperita)"},
+{name:"Roxo Beringela",   code:"Eggplant",    r:78, g:40, b:65,  cat:"nature", origin:"Fruto da berinjela (Solanum melongena)"},
+{name:"Vermelho Morango", code:"Strawberry",  r:220,g:48, b:62,  cat:"nature", origin:"Fruto maduro do morangueiro"},
+{name:"Laranja Abóbora",  code:"Pumpkin",     r:230,g:115,b:28,  cat:"nature", origin:"Casca da abóbora madura"},
+{name:"Amarelo Palha",    code:"Straw",       r:228,g:210,b:145, cat:"nature", origin:"Fibra de palha de trigo seco"},
+{name:"Verde Oliva",      code:"Olive",       r:118,g:120,b:52,  cat:"nature", origin:"Fruto verde da oliveira"},
+{name:"Cinza Fumaça",     code:"Smoke",       r:188,g:185,b:180, cat:"nature", origin:"Fumaça de madeira clara"},
+{name:"Branco Marfim",    code:"Ivory",       r:255,g:248,b:228, cat:"nature", origin:"Dentina de dente de elefante"},
+{name:"Azul Gelo",        code:"Ice Blue",    r:200,g:228,b:240, cat:"nature", origin:"Geleira e gelo glacial translúcido"},
+{name:"Dourado Mel",      code:"Honey",       r:222,g:168,b:45,  cat:"nature", origin:"Mel de abelha puro e fresco"},
+{name:"Marrom Cacau",     code:"Cacao",       r:98, g:55, b:32,  cat:"nature", origin:"Semente de cacau (Theobroma cacao)"},
+{name:"Vermelho Vinho",   code:"Wine",        r:115,g:28, b:42,  cat:"nature", origin:"Vinho tinto envelhecido"},
+{name:"Rosa Salmão",      code:"Salmon",      r:248,g:158,b:128, cat:"nature", origin:"Carne do salmão fresco (Salmo salar)"},
+{name:"Cinza Granito",    code:"Granite",     r:108,g:105,b:100, cat:"nature", origin:"Rocha granítica polida"},
 
-  // Oranges & Ambers
-  {name:"Apricot",code:"14-1135 TCX",r:248,g:185,b:142},
-  {name:"Peach Amber",code:"14-1130 TCX",r:240,g:175,b:130},
-  {name:"Tangerine",code:"15-1157 TCX",r:248,g:145,b:78},
-  {name:"Orange Tiger",code:"16-1462 TCX",r:240,g:120,b:55},
-  {name:"Autumn Maple",code:"16-1450 TCX",r:218,g:112,b:62},
-  {name:"Russet Orange",code:"18-1248 TCX",r:195,g:88,b:50},
-  {name:"Amber Gold",code:"14-0941 TCX",r:232,g:180,b:90},
-  {name:"Honey Gold",code:"15-1062 TCX",r:210,g:158,b:58},
-  {name:"Sunflower",code:"13-0942 TCX",r:232,g:194,b:112},
-  {name:"Golden Yellow",code:"13-0858 TCX",r:250,g:210,b:75},
-  {name:"Mango",code:"15-1160 TCX",r:255,g:175,b:80},
-  {name:"Saffron",code:"15-1150 TCX",r:245,g:162,b:60},
-  {name:"Artisan Gold",code:"16-0943 TCX",r:200,g:155,b:72},
-  {name:"Harvest Gold",code:"16-0950 TCX",r:195,g:148,b:62},
-  {name:"Caramel",code:"15-1239 TCX",r:210,g:158,b:98},
-  {name:"Tan",code:"15-1128 TCX",r:205,g:168,b:118},
+// ── ORIGEM GEOGRÁFICA ──────────────────────────────────
+{name:"Azul Prússia",     code:"Prussian Blue",  r:0,  g:49, b:83,  cat:"geo", origin:"Pigmento sintético prussiano, séc. XVIII, Berlim"},
+{name:"Vermelho Veneza",  code:"Venice Red",     r:178,g:54, b:44,  cat:"geo", origin:"Ocre avermelhado dos artistas venezianos"},
+{name:"Verde Nilo",       code:"Nile Green",     r:148,g:190,b:152, cat:"geo", origin:"Inspirado nas margens verdes do Rio Nilo, Egito"},
+{name:"Azul Nilo",        code:"Nile Blue",      r:100,g:168,b:185, cat:"geo", origin:"Tom das águas do Rio Nilo visto do céu"},
+{name:"Índigo Índia",     code:"India Indigo",   r:48, g:38, b:110, cat:"geo", origin:"Corante extraído do Indigofera tinctoria, Índia"},
+{name:"Vermelho Turco",   code:"Turkey Red",     r:168,g:28, b:38,  cat:"geo", origin:"Técnica de tintura a partir da raiz de garança, Turquia"},
+{name:"Azul Persa",       code:"Persian Blue",   r:40, g:80, b:165, cat:"geo", origin:"Pigmento lapislázuli do Afeganistão, rota da seda"},
+{name:"Amarelo Nápoles",  code:"Naples Yellow",  r:250,g:210,b:108, cat:"geo", origin:"Pigmento de antimoniato de chumbo, Nápoles séc. XVII"},
+{name:"Verde Viridiano",  code:"Viridian",       r:48, g:128,b:108, cat:"geo", origin:"Pigmento sintético criado na França em 1859"},
+{name:"Rosa Pompeia",     code:"Pompeian Rose",  r:208,g:78, b:70,  cat:"geo", origin:"Tom dos afrescos e pigmentos da antiga Pompeia"},
+{name:"Ocre Sienna",      code:"Raw Sienna",     r:188,g:128,b:48,  cat:"geo", origin:"Argila natural de Sienna, Toscana, Itália"},
+{name:"Sienna Queimada",  code:"Burnt Sienna",   r:165,g:88, b:42,  cat:"geo", origin:"Ocre de Sienna calcinado ao forno"},
+{name:"Umbra Natural",    code:"Raw Umber",      r:108,g:88, b:60,  cat:"geo", origin:"Pigmento de mangânio da região da Úmbria, Itália"},
+{name:"Umbra Queimada",   code:"Burnt Umber",    r:90, g:55, b:32,  cat:"geo", origin:"Umbra calcinada, pigmento clássico europeu"},
+{name:"Laranja Mínio",    code:"Minium",         r:228,g:80, b:42,  cat:"geo", origin:"Pigmento de chumbo vermelho-laranja, uso romano"},
+{name:"Azul Egípcio",     code:"Egyptian Blue",  r:30, g:75, b:148, cat:"geo", origin:"Primeiro pigmento sintético da história, c. 3000 a.C."},
+{name:"Amarelo Índico",   code:"Indian Yellow",  r:228,g:180,b:28,  cat:"geo", origin:"Pigmento medieval extraído de urina de vacas da Índia"},
+{name:"Verde Esmeralda Paris", code:"Paris Green",r:80,g:178,b:110, cat:"geo", origin:"Arsenato de cobre criado em Paris no séc. XIX"},
+{name:"Azul Ultramar",    code:"Ultramarine",    r:25, g:42, b:148, cat:"geo", origin:"Lapislázuli pulverizado, importado do Afeganistão"},
+{name:"Amarelo Orpiment", code:"Orpiment",       r:245,g:205,b:22,  cat:"geo", origin:"Sulfeto de arsênio, pigmento do Oriente Médio antigo"},
+{name:"Branco Titânio",   code:"Titanium White", r:248,g:248,b:248, cat:"geo", origin:"Dióxido de titânio, descoberto na Suécia em 1791"},
+{name:"Azul Cobalto",     code:"Cobalt Blue",    r:0,  g:70, b:168, cat:"geo", origin:"Aluminiato de cobalto, mineral da mina de Cobalt, Canadá"},
+{name:"Verde Cromo",      code:"Chrome Green",   r:48, g:110,b:48,  cat:"geo", origin:"Óxido de cromo, desenvolvido na Europa séc. XIX"},
+{name:"Amarelo Cádmio",   code:"Cadmium Yellow", r:255,g:222,b:0,   cat:"geo", origin:"Sulfeto de cádmio descoberto em minas alemãs, 1817"},
+{name:"Vermelho Cádmio",  code:"Cadmium Red",    r:228,g:48, b:28,  cat:"geo", origin:"Selenieto de cádmio, pigmento criado na Alemanha"},
+{name:"Marrom Van Dyke",  code:"Van Dyke Brown", r:95, g:58, b:35,  cat:"geo", origin:"Terra escura da região de Colônia e Cassel, Alemanha"},
+{name:"Verde Hooker",     code:"Hooker's Green", r:45, g:95, b:58,  cat:"geo", origin:"Criado pelo botânico inglês William Hooker, séc. XIX"},
+{name:"Azul Cerúleo",     code:"Cerulean",       r:0,  g:122,b:178, cat:"geo", origin:"Estannato de cobalto, de Stannos (estanho, latim)"},
+{name:"Rosa Alizarina",   code:"Alizarin",       r:178,g:22, b:42,  cat:"geo", origin:"Corante da raiz de garança, Médio Oriente e Europa"},
+{name:"Azul Manganese",   code:"Manganese Blue", r:55, g:170,b:210, cat:"geo", origin:"Permanganato de bário, desenvolvido na Alemanha"},
 
-  // Yellows & Greens
-  {name:"Pale Lemon",code:"11-0710 TCX",r:252,g:248,b:195},
-  {name:"Lemon Tonic",code:"12-0752 TCX",r:248,g:238,b:118},
-  {name:"Chartreuse",code:"13-0545 TCX",r:215,g:232,b:80},
-  {name:"Lime Punch",code:"13-0351 TCX",r:188,g:222,b:66},
-  {name:"Jade Lime",code:"15-0343 TCX",r:142,g:192,b:85},
-  {name:"Foliage",code:"17-0535 TCX",r:110,g:155,b:68},
-  {name:"Fern",code:"17-0230 TCX",r:98,g:148,b:85},
-  {name:"Jade Green",code:"16-0237 TCX",r:88,g:162,b:100},
-  {name:"Greenery",code:"15-0343 TCX",r:136,g:176,b:75},
-  {name:"Sage",code:"16-0220 TCX",r:155,g:170,b:138},
-  {name:"Smoke Green",code:"15-0316 TCX",r:178,g:188,b:162},
-  {name:"Meadow",code:"17-0145 TCX",r:80,g:148,b:70},
-  {name:"Forest",code:"19-0230 TCX",r:45,g:92,b:52},
-  {name:"Vineyard Green",code:"17-0232 TCX",r:70,g:118,b:75},
-  {name:"Hunter Green",code:"19-0419 TCX",r:45,g:80,b:55},
-  {name:"Mint",code:"13-0220 TCX",r:172,g:230,b:190},
-  {name:"Honeydew",code:"12-0225 TCX",r:210,g:240,b:215},
-  {name:"Seafoam",code:"13-0117 TCX",r:175,g:222,b:200},
-  {name:"Aruba Blue",code:"14-4522 TCX",r:88,g:200,b:188},
-  {name:"Aqua Sky",code:"13-4411 TCX",r:140,g:218,b:215},
-  {name:"Turquoise",code:"15-5519 TCX",r:62,g:192,b:188},
+// ── HISTÓRICO ──────────────────────────────────────────
+{name:"Púrpura Tiro",     code:"Tyrian Purple",  r:102,g:2,  b:60,  cat:"history", origin:"Corante extraído do molusco Murex, Fenícia ~1200 a.C."},
+{name:"Azul Real",        code:"Royal Blue",     r:25, g:50, b:168, cat:"history", origin:"Reservado a realezas europeias — Henry V e Versalhes"},
+{name:"Escarlate Imperial",code:"Imperial Scarlet",r:188,g:15,b:22, cat:"history", origin:"Vestes imperiais romanas tingidas com quermes"},
+{name:"Dourado Imperial", code:"Imperial Gold",  r:210,g:168,b:28,  cat:"history", origin:"Ouro real das cortes imperiais da China e Bizâncio"},
+{name:"Verde Venenoso",   code:"Scheele's Green",r:90, g:155,b:58,  cat:"history", origin:"Arsenito de cobre por Carl Scheele, 1775 — altamente tóxico"},
+{name:"Amarelo Rococó",   code:"Rococo Yellow",  r:238,g:218,b:140, cat:"history", origin:"Tom suave dos interiores e moda do Rococó francês"},
+{name:"Azul Watteau",     code:"Watteau Blue",   r:108,g:158,b:195, cat:"history", origin:"Tom recorrente nas pinturas de Antoine Watteau, c. 1710"},
+{name:"Rosa Pompadour",   code:"Pompadour Rose", r:235,g:140,b:160, cat:"history", origin:"Favorito da Marquesa de Pompadour, corte de Luís XV"},
+{name:"Verde Vitoriano",  code:"Victorian Green",r:62, g:108,b:72,  cat:"history", origin:"Tom das paredes e tecidos do período vitoriano inglês"},
+{name:"Azul Bismarck",    code:"Bismarck Brown", r:130,g:75, b:38,  cat:"history", origin:"Pigmento marrom-avermelhado popular na Era Bismarck"},
+{name:"Verde Art Nouveau",code:"Art Nouveau",    r:80, g:138,b:85,  cat:"history", origin:"Verde orgânico das obras de Mucha e Klimt, 1890–1910"},
+{name:"Preto Vitoriano",  code:"Victorian Black",r:28, g:22, b:28,  cat:"history", origin:"Luto vitoriano — a Rainha Vitória usou por 40 anos"},
+{name:"Carmim",           code:"Carmine",        r:165,g:12, b:42,  cat:"history", origin:"Corante de cochonilha Dactylopius coccus, Aztecas ~1000 a.C."},
+{name:"Azul Woad",        code:"Woad Blue",      r:62, g:92, b:148, cat:"history", origin:"Corante celta extraído da Isatis tinctoria, Europa"},
+{name:"Vermelho Marte",   code:"Mars Red",       r:162,g:52, b:38,  cat:"history", origin:"Óxido de ferro sintético, séc. XVIII"},
+{name:"Preto de Marcasite",code:"Marcasite",     r:45, g:48, b:52,  cat:"history", origin:"Mineral pirita com brilho metálico, joalheria vitoriana"},
+{name:"Azul Maya",        code:"Maya Blue",      r:48, g:118,b:168, cat:"history", origin:"Pigmento de índigo e paligorsquita, civilização Maia"},
+{name:"Vermelho Mingon",  code:"Mignon Red",     r:198,g:68, b:72,  cat:"history", origin:"Tom da porcelana de Meissen alemã do séc. XVIII"},
+{name:"Verde Veronese",   code:"Veronese Green", r:38, g:148,b:88,  cat:"history", origin:"Tom recorrente nas pinturas de Paolo Veronese, 1528-1588"},
+{name:"Azul Académico",   code:"Academic Blue",  r:42, g:62, b:108, cat:"history", origin:"Tom dos uniformes e pinturas das academias europeias"},
+{name:"Amarelo Bismarck", code:"Vesuvius Yellow",r:220,g:175,b:48,  cat:"history", origin:"Tom encontrado nos afrescos de Herculano e Pompeia"},
+{name:"Vermelho Sandix",  code:"Sandix",         r:185,g:52, b:35,  cat:"history", origin:"Pigmento romano à base de mínio, descrito por Plínio"},
+{name:"Verde Florença",   code:"Florentine Green",r:52,g:115,b:68,  cat:"history", origin:"Tom dos têxteis e afrescos da Florença renascentista"},
 
-  // Blues
-  {name:"Sky Blue",code:"14-4318 TCX",r:150,g:205,b:235},
-  {name:"Cerulean",code:"15-4020 TCX",r:130,g:180,b:218},
-  {name:"Placid Blue",code:"15-3920 TCX",r:128,g:175,b:220},
-  {name:"Cornflower Blue",code:"16-4132 TCX",r:115,g:158,b:212},
-  {name:"Little Boy Blue",code:"14-4122 TCX",r:148,g:195,b:228},
-  {name:"Blue Topaz",code:"17-4328 TCX",r:80,g:155,b:205},
-  {name:"Marina",code:"17-4336 TCX",r:60,g:148,b:205},
-  {name:"Regatta",code:"18-4245 TCX",r:40,g:115,b:175},
-  {name:"Classic Blue",code:"19-4052 TCX",r:15,g:76,b:129},
-  {name:"Bright Blue",code:"19-4050 TCX",r:30,g:95,b:160},
-  {name:"Estate Blue",code:"19-3933 TCX",r:38,g:68,b:128},
-  {name:"Navy Peony",code:"19-4340 TCX",r:22,g:48,b:95},
-  {name:"Peacoat",code:"19-3832 TCX",r:28,g:42,b:78},
-  {name:"Maritime Blue",code:"19-4241 TCX",r:20,g:58,b:100},
-  {name:"Midnight Blue",code:"19-3943 TCX",r:25,g:38,b:90},
-  {name:"Steel Blue",code:"17-4041 TCX",r:90,g:135,b:175},
-  {name:"Blue Mirage",code:"18-4025 TCX",r:78,g:110,b:148},
+// ── PESSOAS & CULTURA ────────────────────────────────────
+{name:"Verde Kelly",      code:"Kelly Green",    r:70, g:162,b:50,  cat:"people", origin:"Associado a Grace Kelly e ao verde irlandês"},
+{name:"Azul Klein",       code:"International Klein Blue",r:0,g:47,b:167, cat:"people", origin:"Criado e patenteado pelo artista Yves Klein em 1960"},
+{name:"Amarelo Schiaparelli",code:"Shocking Pink",r:252,g:28,b:140, cat:"people", origin:"Criado por Elsa Schiaparelli, 1937 — o rosa chocante"},
+{name:"Verde Veronese",   code:"Paul Veronese",  r:42, g:155,b:90,  cat:"people", origin:"Tom icônico nas pinturas de Paolo Veronese"},
+{name:"Azul Picasso",     code:"Picasso Blue",   r:42, g:68, b:138, cat:"people", origin:"Período Azul de Pablo Picasso (1901–1904)"},
+{name:"Vermelho Pomodoro",code:"Pomodoro Red",   r:195,g:40, b:22,  cat:"people", origin:"Tom das esculturas de Arnaldo Pomodoro"},
+{name:"Rosa Schiaparelli",code:"Magenta Schiaparelli",r:242,g:40,b:108,cat:"people",origin:"Revisão do shocking pink original em versão magenta"},
+{name:"Azul Majorelle",   code:"Majorelle Blue", r:88, g:55, b:198, cat:"people", origin:"Criado pelo pintor Jacques Majorelle em Marrakech, 1937"},
+{name:"Verde Chartreuse", code:"Chartreuse",     r:128,g:200,b:0,   cat:"people", origin:"Licor produzido pelos monges cartuxos desde 1605"},
+{name:"Amarelo Van Gogh", code:"Chrome Yellow",  r:255,g:200,b:0,   cat:"people", origin:"Amarelo girassol icônico de Vincent van Gogh"},
+{name:"Azul Monet",       code:"Monet Blue",     r:88, g:138,b:188, cat:"people", origin:"Tom das águas e nenúfares de Claude Monet"},
+{name:"Rosa Frida",       code:"Frida Pink",     r:228,g:85, b:105, cat:"people", origin:"Rosas vibrantes das pinturas de Frida Kahlo"},
+{name:"Terracota Kahlo",  code:"Terracotta Kahlo",r:188,g:82,b:52,  cat:"people", origin:"Tons da casa azul de Frida Kahlo em Coyoacán"},
+{name:"Vermelho Kandinsky",code:"Kandinsky Red", r:195,g:25, b:35,  cat:"people", origin:"Vermelho expressivo nas obras de Wassily Kandinsky"},
+{name:"Amarelo Klimt",    code:"Klimt Gold",     r:215,g:172,b:45,  cat:"people", origin:"Ouro das obras do período dourado de Gustav Klimt"},
+{name:"Azul Isadora",     code:"Isadora Blue",   r:58, g:88, b:168, cat:"people", origin:"Tom dos véus de Isadora Duncan, pioneira da dança moderna"},
+{name:"Laranja Hermès",   code:"Hermès Orange",  r:228,g:90, b:22,  cat:"people", origin:"Laranja icônico das caixas Hermès desde os anos 1940"},
+{name:"Verde Tiffany",    code:"Tiffany Blue",   r:10, g:185,b:178, cat:"people", origin:"Azul-verde das caixas Tiffany & Co. desde 1878"},
+{name:"Rosa Millennial",  code:"Millennial Pink",r:245,g:195,b:185, cat:"people", origin:"Cor dominante da estética Instagram e geração millennial"},
+{name:"Roxo Príncipe",    code:"Prince Purple",  r:118,g:0,  b:118, cat:"people", origin:"Roxo icônico de Prince, músico — usado em Purple Rain"},
+{name:"Vermelho Ferrari", code:"Ferrari Red",    r:198,g:15, b:18,  cat:"people", origin:"Rosso Corsa italiano, cor oficial da Ferrari desde 1907"},
+{name:"Azul Yohji",       code:"Yohji Black-Blue",r:22,g:28, b:58,  cat:"people", origin:"Escuridão azulada icônica de Yohji Yamamoto"},
+{name:"Azul Chanel",      code:"Chanel Navy",    r:18, g:28, b:58,  cat:"people", origin:"Azul marinho elegante recorrente nas coleções Chanel"},
+{name:"Preto Coco",       code:"Coco Black",     r:20, g:18, b:20,  cat:"people", origin:"O preto absoluto de Coco Chanel, LBD desde 1926"},
+{name:"Bege Chanel",      code:"Chanel Beige",   r:215,g:195,b:168, cat:"people", origin:"Bege nude icônico da casa Chanel"},
+{name:"Azul Dior",        code:"Dior Blue",      r:12, g:48, b:108, cat:"people", origin:"Azul profundo recorrente nas criações Christian Dior"},
+{name:"Rosa Barbie",      code:"Barbie Pink",    r:228,g:0,  b:118, cat:"people", origin:"Rosa icônico da boneca Barbie da Mattel desde 1959"},
+{name:"Azul Rei",         code:"Rey Blue",       r:35, g:62, b:148, cat:"people", origin:"Azul real da realeza europeia e selos históricos"},
+{name:"Violeta Elsa",     code:"Elsa Violet",    r:148,g:88, b:198, cat:"people", origin:"Lilás gelado de Elsa do filme Frozen (Disney, 2013)"},
+{name:"Amarelo Prada",    code:"Prada Yellow",   r:248,g:215,b:0,   cat:"people", origin:"Amarelo limão provocativo da Prada, coleção 2022"},
 
-  // Purples & Violets
-  {name:"Pastel Lilac",code:"12-3612 TCX",r:218,g:205,b:228},
-  {name:"Lavender",code:"13-3820 TCX",r:200,g:190,b:225},
-  {name:"Orchid",code:"14-3411 TCX",r:192,g:172,b:215},
-  {name:"Violet Tulip",code:"15-3817 TCX",r:178,g:162,b:212},
-  {name:"Wisteria",code:"16-3810 TCTeX",r:162,g:145,b:195},
-  {name:"Amethyst",code:"17-3628 TCX",r:148,g:112,b:188},
-  {name:"Violet",code:"18-3633 TCX",r:128,g:88,b:172},
-  {name:"Deep Lavender",code:"18-3633 TCX",r:118,g:95,b:162},
-  {name:"Purple",code:"19-3536 TCX",r:88,g:55,b:138},
-  {name:"Royal Purple",code:"18-3633 TCX",r:102,g:52,b:148},
-  {name:"Passion Flower",code:"19-3536 TCX",r:75,g:40,b:112},
-  {name:"Blackberry",code:"19-3220 TCX",r:62,g:38,b:72},
-  {name:"Plum",code:"19-3218 TCX",r:82,g:42,b:65},
-  {name:"Eggplant",code:"19-3218 TCX",r:65,g:35,b:58},
-
-  // Browns & Taupes
-  {name:"Toasted Coconut",code:"17-1044 TCX",r:185,g:130,b:85},
-  {name:"Adobe",code:"17-1340 TCX",r:188,g:122,b:95},
-  {name:"Sandstorm",code:"16-1138 TCX",r:212,g:172,b:118},
-  {name:"Warm Taupe",code:"16-0916 TCX",r:195,g:172,b:145},
-  {name:"Taupe",code:"17-0908 TCX",r:172,g:148,b:128},
-  {name:"Cinnamon",code:"18-1244 TCX",r:165,g:98,b:68},
-  {name:"Tortoise Shell",code:"18-1048 TCX",r:155,g:98,b:58},
-  {name:"Mocha Bisque",code:"16-1422 TCX",r:200,g:162,b:130},
-  {name:"Sienna",code:"18-1142 TCX",r:160,g:90,b:58},
-  {name:"Caramel Cafe",code:"18-1048 TCX",r:148,g:88,b:52},
-  {name:"Brown Patina",code:"18-1048 TCX",r:128,g:80,b:52},
-  {name:"Leather Brown",code:"19-1020 TCX",r:112,g:68,b:42},
-  {name:"Chocolate",code:"19-1117 TCX",r:88,g:52,b:35},
-  {name:"Coffee Bean",code:"19-1220 TCX",r:72,g:42,b:28},
-  {name:"Espresso",code:"19-1217 TCX",r:55,g:35,b:25},
-
-  // Grays & Blacks
-  {name:"Glacier Gray",code:"13-4104 TCX",r:218,g:218,b:218},
-  {name:"Barely Blue",code:"12-4306 TCX",r:225,g:225,b:228},
-  {name:"Silver Gray",code:"14-4102 TCX",r:195,g:195,b:192},
-  {name:"Paloma",code:"15-3800 TCX",r:178,g:175,b:170},
-  {name:"Monument",code:"16-3802 TCX",r:158,g:155,b:152},
-  {name:"Alloy",code:"17-3911 TCX",r:138,g:135,b:132},
-  {name:"Smoke",code:"14-4105 TCX",r:200,g:198,b:195},
-  {name:"Quarry",code:"17-0207 TCX",r:148,g:142,b:132},
-  {name:"Elephant Skin",code:"17-0204 TCX",r:138,g:132,b:120},
-  {name:"Zinc",code:"17-0208 TCX",r:125,g:122,b:115},
-  {name:"Gunmetal",code:"18-0306 TCX",r:90,g:92,b:88},
-  {name:"Pewter",code:"17-0207 TCX",r:130,g:128,b:120},
-  {name:"Pavement",code:"18-0201 TCX",r:105,g:102,b:98},
-  {name:"Dark Shadow",code:"18-0312 TCX",r:85,g:85,b:78},
-  {name:"Rabbit",code:"17-0207 TCX",r:148,g:138,b:128},
-  {name:"Jet Black",code:"19-0303 TCX",r:35,g:33,b:32},
-  {name:"Black Ink",code:"19-4005 TCX",r:28,g:28,b:30},
-  {name:"Caviar",code:"19-4005 TCX",r:22,g:20,b:22},
+// ── INDÚSTRIA QUÍMICA & MARKETING ─────────────────────
+{name:"Ciano CMYK",       code:"Process Cyan",   r:0,  g:175,b:235, cat:"industry", origin:"Ciano de processo, base do modelo CMYK"},
+{name:"Magenta CMYK",     code:"Process Magenta",r:235,g:0,  b:140, cat:"industry", origin:"Magenta de processo, base do modelo CMYK"},
+{name:"Amarelo CMYK",     code:"Process Yellow", r:255,g:235,b:0,   cat:"industry", origin:"Amarelo de processo, base do modelo CMYK"},
+{name:"Vermelho Tomate",  code:"Web Red",        r:255,g:0,  b:0,   cat:"industry", origin:"Vermelho puro RGB #FF0000, cor de referência digital"},
+{name:"Verde Web",        code:"Web Green",      r:0,  g:128,b:0,   cat:"industry", origin:"Verde puro CSS #008000, cor padrão da web"},
+{name:"Azul Web",         code:"Web Blue",       r:0,  g:0,  b:255, cat:"industry", origin:"Azul puro RGB #0000FF, referência digital"},
+{name:"Azul Facebook",    code:"Facebook Blue",  r:24, g:119,b:242, cat:"industry", origin:"Azul de marca do Facebook/Meta desde 2004"},
+{name:"Vermelho YouTube", code:"YouTube Red",    r:255,g:0,  b:0,   cat:"industry", origin:"Vermelho da identidade visual do YouTube"},
+{name:"Laranja Amazon",   code:"Amazon Orange",  r:255,g:153,b:0,   cat:"industry", origin:"Laranja sorriso da Amazon, identidade desde 2000"},
+{name:"Verde Spotify",    code:"Spotify Green",  r:30, g:215,b:96,  cat:"industry", origin:"Verde brilhante da identidade Spotify"},
+{name:"Azul Twitter",     code:"Twitter Blue",   r:29, g:161,b:242, cat:"industry", origin:"Azul pássaro da marca Twitter/X"},
+{name:"Vermelho Netflix", code:"Netflix Red",    r:229,g:9,  b:20,  cat:"industry", origin:"Vermelho sangue da identidade Netflix"},
+{name:"Cinza Apple",      code:"Apple Silver",   r:142,g:142,b:147, cat:"industry", origin:"Space Gray/Silver das embalagens Apple"},
+{name:"Azul Samsung",     code:"Samsung Blue",   r:20, g:40, b:160, cat:"industry", origin:"Azul da identidade corporativa Samsung"},
+{name:"Amarelo Ikea",     code:"IKEA Yellow",    r:255,g:203,b:0,   cat:"industry", origin:"Amarelo sueco da identidade IKEA"},
+{name:"Azul Ikea",        code:"IKEA Blue",      r:0,  g:82, b:155, cat:"industry", origin:"Azul sueco da identidade IKEA"},
+{name:"Vermelho Coca-Cola",code:"Coca-Cola Red", r:242,g:0,  b:14,  cat:"industry", origin:"Vermelho de Santa Claus — identidade Coca-Cola desde 1892"},
+{name:"Roxo Cadbury",     code:"Cadbury Purple", r:95, g:12, b:118, cat:"industry", origin:"Roxo da identidade Cadbury, registrado em 2008"},
+{name:"Verde Heineken",   code:"Heineken Green", r:0,  g:122,b:38,  cat:"industry", origin:"Verde garrafa da identidade Heineken"},
+{name:"Azul Levis",       code:"Denim Blue",     r:38, g:78, b:128, cat:"industry", origin:"Azul índigo do denim Levi's, inventado em 1873"},
+{name:"Laranja Hermès Ind",code:"Hermès Orange Ind",r:225,g:92,b:22,cat:"industry",origin:"Laranja de embalagem Hermès — cor registrada internacionalmente"},
+{name:"Verde Pantone Ind",code:"Pantone Green",  r:0,  g:172,b:108, cat:"industry", origin:"Verde corporativo da própria Pantone Inc."},
+{name:"Amarelo Caterpillar",code:"CAT Yellow",   r:255,g:200,b:0,   cat:"industry", origin:"Amarelo industrial da Caterpillar, norma de segurança"},
+{name:"Laranja Segurança",code:"Safety Orange",  r:255,g:103,b:0,   cat:"industry", origin:"ANSI Z535 — laranja padrão de segurança industrial"},
+{name:"Amarelo Segurança",code:"Safety Yellow",  r:238,g:220,b:0,   cat:"industry", origin:"Amarelo fluorescente de sinalização e EPI"},
+{name:"Verde Segurança",  code:"Safety Green",   r:0,  g:170,b:60,  cat:"industry", origin:"Verde de saídas de emergência — norma ISO 7010"},
+{name:"Azul RAL 5010",    code:"RAL 5010",       r:0,  g:90, b:160, cat:"industry", origin:"Azul genciana do sistema RAL europeu de tintas industriais"},
+{name:"Cinza RAL 7035",   code:"RAL 7035",       r:208,g:208,b:205, cat:"industry", origin:"Cinza claro RAL, cor mais vendida de painéis elétricos"},
+{name:"Vermelho RAL 3020",code:"RAL 3020",       r:200,g:28, b:22,  cat:"industry", origin:"Vermelho tráfego RAL, usado em sinalizações europeias"},
+{name:"Branco Óptico",    code:"Optical White",  r:255,g:255,b:255, cat:"industry", origin:"Branco puro RGB, base dos monitores e impressoras"},
+{name:"Preto Registro",   code:"Registration Black",r:0,g:0,b:0,    cat:"industry", origin:"Preto absoluto de registro gráfico e impressão offset"},
 ];
 
-// ─── State ─────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
 let selectedColor = null;
-let bestMatches = [];
-let savedColors = JSON.parse(localStorage.getItem('pantone_saved') || '[]');
+let allMatches = [];
+let savedColors = JSON.parse(localStorage.getItem('cnome_saved') || '[]');
 let cameraStream = null;
 let imageLoaded = false;
-let crosshairX = 0, crosshairY = 0;
-let currentTab = 'identify';
+let activeFilters = new Set(Object.keys(CATS)); // all on by default
 
-// ─── Color math ─────────────────────────────────────────────────────────────
-function rgbToLab(r, g, b) {
-  r /= 255; g /= 255; b /= 255;
-  r = r > 0.04045 ? Math.pow((r+0.055)/1.055, 2.4) : r/12.92;
-  g = g > 0.04045 ? Math.pow((g+0.055)/1.055, 2.4) : g/12.92;
-  b = b > 0.04045 ? Math.pow((b+0.055)/1.055, 2.4) : b/12.92;
-  let x = (r*0.4124564 + g*0.3575761 + b*0.1804375)/0.95047;
-  let y = (r*0.2126729 + g*0.7151522 + b*0.0721750)/1.00000;
-  let z = (r*0.0193339 + g*0.1191920 + b*0.9503041)/1.08883;
-  x = x > 0.008856 ? Math.pow(x,1/3) : 7.787*x + 16/116;
-  y = y > 0.008856 ? Math.pow(y,1/3) : 7.787*y + 16/116;
-  z = z > 0.008856 ? Math.pow(z,1/3) : 7.787*z + 16/116;
-  return { L: 116*y-16, a: 500*(x-y), b: 200*(y-z) };
+// ═══════════════════════════════════════════════════════════
+//  COLOR MATH
+// ═══════════════════════════════════════════════════════════
+function rgbToLab(r,g,b){
+  r/=255;g/=255;b/=255;
+  r=r>0.04045?Math.pow((r+0.055)/1.055,2.4):r/12.92;
+  g=g>0.04045?Math.pow((g+0.055)/1.055,2.4):g/12.92;
+  b=b>0.04045?Math.pow((b+0.055)/1.055,2.4):b/12.92;
+  let x=(r*0.4124564+g*0.3575761+b*0.1804375)/0.95047;
+  let y=(r*0.2126729+g*0.7151522+b*0.0721750)/1.00000;
+  let z=(r*0.0193339+g*0.1191920+b*0.9503041)/1.08883;
+  x=x>0.008856?Math.pow(x,1/3):7.787*x+16/116;
+  y=y>0.008856?Math.pow(y,1/3):7.787*y+16/116;
+  z=z>0.008856?Math.pow(z,1/3):7.787*z+16/116;
+  return{L:116*y-16,a:500*(x-y),b:200*(y-z)};
 }
-
-function deltaE(r1,g1,b1, r2,g2,b2) {
-  const l1 = rgbToLab(r1,g1,b1), l2 = rgbToLab(r2,g2,b2);
+function deltaE(r1,g1,b1,r2,g2,b2){
+  const l1=rgbToLab(r1,g1,b1),l2=rgbToLab(r2,g2,b2);
   return Math.sqrt(Math.pow(l1.L-l2.L,2)+Math.pow(l1.a-l2.a,2)+Math.pow(l1.b-l2.b,2));
 }
+function toHex(r,g,b){'#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();}
+function hex(r,g,b){return'#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();}
+function matchScore(de){return Math.max(0,Math.round(100-de*1.8));}
 
-function toHex(r,g,b) {
-  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('').toUpperCase();
+function findMatches(r,g,b){
+  return COLORS.map(c=>({...c,de:deltaE(r,g,b,c.r,c.g,c.b)}))
+    .sort((a,b)=>a.de-b.de);
 }
 
-function matchScore(de) {
-  return Math.max(0, Math.round(100 - de * 1.8));
+// ═══════════════════════════════════════════════════════════
+//  FILTERS
+// ═══════════════════════════════════════════════════════════
+function buildFilterChips(){
+  const row=document.getElementById('filter-row');
+  row.innerHTML=Object.entries(CATS).map(([k,v])=>`
+    <div class="chip on" id="chip-${k}" style="background:${v.bg};color:${v.color};border-color:transparent"
+         onclick="toggleFilter('${k}')">
+      <div class="chip-dot" style="background:${v.color}"></div>${v.label}
+    </div>`).join('');
 }
 
-function findMatches(r,g,b) {
-  return PANTONE_TCX.map(p => ({
-    ...p,
-    de: deltaE(r,g,b, p.r,p.g,p.b)
-  })).sort((a,b) => a.de-b.de).slice(0,5);
+function toggleFilter(k){
+  if(activeFilters.has(k)) activeFilters.delete(k);
+  else activeFilters.add(k);
+  const chip=document.getElementById('chip-'+k);
+  const v=CATS[k];
+  if(activeFilters.has(k)){
+    chip.style.background=v.bg; chip.style.color=v.color; chip.style.borderColor='transparent';
+  } else {
+    chip.style.background=''; chip.style.color='var(--text3)'; chip.style.borderColor='var(--border2)';
+  }
+  renderResults();
 }
 
-// ─── UI ─────────────────────────────────────────────────────────────────────
-function showTab(tab) {
-  currentTab = tab;
-  document.getElementById('view-identify').style.display = tab==='identify' ? 'flex' : 'none';
-  document.getElementById('view-identify').style.flexDirection = 'column';
-  document.getElementById('view-saved').style.display = tab==='saved' ? 'block' : 'none';
-  document.getElementById('tab-identify').classList.toggle('active', tab==='identify');
-  document.getElementById('tab-saved').classList.toggle('active', tab==='saved');
-  if(tab === 'saved') renderPalette();
+// ═══════════════════════════════════════════════════════════
+//  UI
+// ═══════════════════════════════════════════════════════════
+function showTab(tab){
+  document.getElementById('view-identify').style.display=tab==='identify'?'contents':'none';
+  document.getElementById('view-saved').style.display=tab==='saved'?'block':'none';
+  document.getElementById('tab-identify').classList.toggle('active',tab==='identify');
+  document.getElementById('tab-saved').classList.toggle('active',tab==='saved');
+  if(tab==='saved') renderPalette();
 }
 
-function showTab(tab) {
-  currentTab = tab;
-  const vi = document.getElementById('view-identify');
-  const vs = document.getElementById('view-saved');
-  if(tab === 'identify') { vi.style.display = 'contents'; vs.style.display = 'none'; }
-  else { vi.style.display = 'none'; vs.style.display = 'block'; renderPalette(); }
-  document.getElementById('tab-identify').classList.toggle('active', tab==='identify');
-  document.getElementById('tab-saved').classList.toggle('active', tab==='saved');
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
 }
 
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+function setColorStrip(r,g,b){
+  const h=hex(r,g,b);
+  document.getElementById('color-strip').innerHTML=`
+    <div class="swatch-box" style="background:${h}"></div>
+    <div style="flex:1"><div class="swatch-hex">${h}</div><div class="swatch-rgb">R ${r} · G ${g} · B ${b}</div></div>
+    <div class="tap-badge">cor capturada</div>`;
 }
 
-function setColorStrip(r,g,b) {
-  const hex = toHex(r,g,b);
-  document.getElementById('color-strip').innerHTML = `
-    <div class="swatch-box" style="background:${hex}"></div>
-    <div class="swatch-info">
-      <div class="swatch-hex">${hex}</div>
-      <div class="swatch-rgb">R ${r} · G ${g} · B ${b}</div>
-    </div>
-    <div class="tap-hint">cor capturada</div>
-  `;
-}
-
-function renderResults(matches) {
-  const el = document.getElementById('results');
-  el.innerHTML = `<div class="results-label">Pantone TCX — mais próximas</div>` +
-    matches.map((m,i) => {
-      const score = matchScore(m.de);
-      const badgeClass = score>=90 ? 'match-hi' : score>=78 ? 'match-md' : 'match-lo';
-      const hex = toHex(m.r, m.g, m.b);
-      return `<div class="pantone-card ${i===0?'best':''}" onclick="cardDetail('${m.name}','${m.code}','${hex}',${m.r},${m.g},${m.b},${score})">
-        <div class="p-swatch" style="background:${hex}"></div>
+function renderResults(){
+  const el=document.getElementById('results');
+  if(!allMatches.length){ el.innerHTML=''; return; }
+  if(!activeFilters.size){
+    el.innerHTML='<div class="no-filter">Nenhuma categoria selecionada.<br>Ative ao menos um filtro acima.</div>';
+    return;
+  }
+  const filtered=allMatches.filter(m=>activeFilters.has(m.cat)).slice(0,8);
+  if(!filtered.length){
+    el.innerHTML='<div class="no-filter">Sem resultados para as categorias selecionadas.</div>';
+    return;
+  }
+  el.innerHTML='<div class="results-label">Cores mais próximas</div>'+
+    filtered.map((m,i)=>{
+      const score=matchScore(m.de);
+      const bc=score>=90?'match-hi':score>=75?'match-md':'match-lo';
+      const cv=CATS[m.cat];
+      return`<div class="pantone-card ${i===0&&filtered[0]===allMatches.filter(x=>activeFilters.has(x.cat))[0]?'best':''}">
+        <div class="p-swatch" style="background:${hex(m.r,m.g,m.b)}"></div>
         <div class="p-details">
           <div class="p-name">${m.name}</div>
-          <div class="p-code">Pantone ${m.code}</div>
+          <div class="p-meta">
+            <span class="cat-badge" style="background:${cv.bg};color:${cv.color}">${cv.label}</span>
+            <span>${m.code}</span>
+          </div>
         </div>
         <div class="p-right">
-          <span class="match-badge ${badgeClass}">${score}%</span>
-          ${i===0 ? '<span class="best-tag">melhor</span>' : ''}
+          <span class="match-badge ${bc}">${score}%</span>
+          ${i===0?'<span class="best-tag">melhor</span>':''}
         </div>
       </div>`;
     }).join('');
-  document.getElementById('btn-save').style.display = 'flex';
+  document.getElementById('btn-save').style.display='flex';
 }
 
-function cardDetail(name, code, hex, r, g, b, score) {
-  toast(`${name} — ${score}% correspondência`);
-}
-
-// ─── Image loading ───────────────────────────────────────────────────────────
-function loadImage(e) {
-  const file = e.target.files[0];
-  if(!file) return;
+// ═══════════════════════════════════════════════════════════
+//  IMAGE / CAMERA
+// ═══════════════════════════════════════════════════════════
+function loadImage(e){
+  const file=e.target.files[0]; if(!file) return;
   stopCamera();
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.getElementById('preview-canvas');
-      const area = document.getElementById('capture-area');
-      const maxH = 280;
-      canvas.style.display = 'block';
-      document.getElementById('placeholder').style.display = 'none';
-      document.getElementById('camera-video').style.display = 'none';
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      canvas.style.height = maxH + 'px';
-      canvas.style.objectFit = 'cover';
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      imageLoaded = true;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.getElementById('preview-canvas');
+      canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+      canvas.style.display='block'; canvas.style.height='270px';
+      document.getElementById('placeholder').style.display='none';
+      document.getElementById('camera-video').style.display='none';
+      canvas.getContext('2d').drawImage(img,0,0);
+      imageLoaded=true;
       setupCrosshair(canvas);
-      // auto-pick center
-      pickColor(canvas, canvas.width/2, canvas.height/2);
+      pickColor(canvas,canvas.width/2,canvas.height/2);
     };
-    img.src = ev.target.result;
+    img.src=ev.target.result;
   };
   reader.readAsDataURL(file);
-  e.target.value = '';
+  e.target.value='';
 }
 
-function setupCrosshair(canvas) {
-  const overlay = document.getElementById('crosshair-overlay');
-  const ring = document.getElementById('crosshair-ring');
-  overlay.style.display = 'block';
-  overlay.style.position = 'absolute';
-  overlay.style.inset = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-
-  // Position ring at center
-  const rect = canvas.getBoundingClientRect();
-  ring.style.left = '50%';
-  ring.style.top = (280/2) + 'px';
-
-  canvas.addEventListener('click', function(e) {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const cx = (e.clientX - rect.left) * scaleX;
-    const cy = (e.clientY - rect.top) * scaleY;
-
-    // visual position
-    ring.style.left = (e.clientX - rect.left) + 'px';
-    ring.style.top = (e.clientY - rect.top) + 'px';
-
-    pickColor(canvas, cx, cy);
-  });
+function setupCrosshair(canvas){
+  const overlay=document.getElementById('crosshair-overlay');
+  const ring=document.getElementById('crosshair-ring');
+  overlay.style.display='block';
+  ring.style.left='50%'; ring.style.top='135px';
+  const handler=ev=>{
+    const rect=canvas.getBoundingClientRect();
+    const sx=canvas.width/rect.width, sy=canvas.height/rect.height;
+    const px=(ev.clientX-rect.left), py=(ev.clientY-rect.top);
+    ring.style.left=px+'px'; ring.style.top=py+'px';
+    pickColor(canvas,px*sx,py*sy);
+  };
+  canvas.onclick=handler;
 }
 
-function pickColor(canvas, cx, cy) {
-  const ctx = canvas.getContext('2d');
-  // sample 5x5 area average for stability
-  const size = 5;
-  const imgData = ctx.getImageData(Math.max(0,cx-size), Math.max(0,cy-size), size*2, size*2);
-  let rSum=0, gSum=0, bSum=0, count=0;
-  for(let i=0; i<imgData.data.length; i+=4) {
-    rSum += imgData.data[i];
-    gSum += imgData.data[i+1];
-    bSum += imgData.data[i+2];
-    count++;
-  }
-  const r = Math.round(rSum/count);
-  const g = Math.round(gSum/count);
-  const b = Math.round(bSum/count);
-  selectedColor = {r,g,b};
+function pickColor(canvas,cx,cy){
+  const ctx=canvas.getContext('2d');
+  const s=6, d=ctx.getImageData(Math.max(0,cx-s),Math.max(0,cy-s),s*2,s*2).data;
+  let r=0,g=0,b=0,n=0;
+  for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];n++;}
+  r=Math.round(r/n);g=Math.round(g/n);b=Math.round(b/n);
+  selectedColor={r,g,b};
   setColorStrip(r,g,b);
-  bestMatches = findMatches(r,g,b);
-  renderResults(bestMatches);
+  allMatches=findMatches(r,g,b);
+  renderResults();
 }
 
-// ─── Camera ─────────────────────────────────────────────────────────────────
-async function toggleCamera() {
-  if(cameraStream) { stopCamera(); return; }
-  try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false});
-    const video = document.getElementById('camera-video');
-    video.srcObject = cameraStream;
-    video.style.display = 'block';
-    document.getElementById('preview-canvas').style.display = 'none';
-    document.getElementById('placeholder').style.display = 'none';
+async function toggleCamera(){
+  if(cameraStream){stopCamera();return;}
+  try{
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    const v=document.getElementById('camera-video');
+    v.srcObject=cameraStream; v.style.display='block';
+    document.getElementById('preview-canvas').style.display='none';
+    document.getElementById('placeholder').style.display='none';
     document.getElementById('btn-camera').classList.add('active');
-    document.getElementById('btn-camera').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Parar câmera`;
-
-    // Show overlay + tap to capture
-    const overlay = document.getElementById('crosshair-overlay');
-    const ring = document.getElementById('crosshair-ring');
-    overlay.style.display = 'block';
-    overlay.style.position = 'absolute';
-    overlay.style.inset = '0';
-    ring.style.left = '50%';
-    ring.style.top = '140px';
-
-    video.addEventListener('click', captureFromCamera);
-    imageLoaded = true;
-  } catch(err) {
-    toast('Câmera não disponível — use a galeria');
-  }
+    document.getElementById('btn-camera').innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Parar`;
+    const ring=document.getElementById('crosshair-ring');
+    document.getElementById('crosshair-overlay').style.display='block';
+    ring.style.left='50%'; ring.style.top='135px';
+    v.onclick=captureFromCamera;
+  }catch(e){toast('Câmera indisponível — use a galeria');}
 }
 
-function captureFromCamera() {
-  const video = document.getElementById('camera-video');
-  const canvas = document.getElementById('preview-canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.style.height = '280px';
-  canvas.style.display = 'block';
-  video.style.display = 'none';
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-  stopCamera(true);
-  setupCrosshair(canvas);
-  pickColor(canvas, canvas.width/2, canvas.height/2);
+function captureFromCamera(){
+  const v=document.getElementById('camera-video');
+  const c=document.getElementById('preview-canvas');
+  c.width=v.videoWidth; c.height=v.videoHeight;
+  c.style.height='270px'; c.style.display='block';
+  v.style.display='none';
+  c.getContext('2d').drawImage(v,0,0);
+  stopCamera(true); setupCrosshair(c);
+  pickColor(c,c.width/2,c.height/2);
 }
 
-function stopCamera(keepFrame=false) {
-  if(cameraStream) {
-    cameraStream.getTracks().forEach(t => t.stop());
-    cameraStream = null;
-  }
-  if(!keepFrame) {
-    document.getElementById('camera-video').style.display = 'none';
-    if(!imageLoaded) document.getElementById('placeholder').style.display = 'flex';
+function stopCamera(keep=false){
+  if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}
+  if(!keep){
+    document.getElementById('camera-video').style.display='none';
+    if(!imageLoaded) document.getElementById('placeholder').style.display='flex';
   }
   document.getElementById('btn-camera').classList.remove('active');
-  document.getElementById('btn-camera').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Câmera ao vivo`;
+  document.getElementById('btn-camera').innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Câmera`;
 }
 
-// ─── Save ────────────────────────────────────────────────────────────────────
-function saveBest() {
-  if(!bestMatches.length || !selectedColor) return;
-  const best = bestMatches[0];
-  const score = matchScore(best.de);
-  const hex = toHex(selectedColor.r, selectedColor.g, selectedColor.b);
-  const pantoneHex = toHex(best.r, best.g, best.b);
-  const entry = { name: best.name, code: best.code, hex, pantoneHex, score, date: Date.now() };
-  // avoid duplicates
-  if(!savedColors.find(s => s.code === best.code)) {
+// ═══════════════════════════════════════════════════════════
+//  SAVE / PALETTE
+// ═══════════════════════════════════════════════════════════
+function saveBest(){
+  const filtered=allMatches.filter(m=>activeFilters.has(m.cat));
+  if(!filtered.length||!selectedColor) return;
+  const best=filtered[0];
+  const score=matchScore(best.de);
+  const entry={name:best.name,code:best.code,cat:best.cat,origin:best.origin,
+    hex:hex(selectedColor.r,selectedColor.g,selectedColor.b),
+    pantoneHex:hex(best.r,best.g,best.b),score,date:Date.now()};
+  if(!savedColors.find(s=>s.code===best.code&&s.cat===best.cat)){
     savedColors.unshift(entry);
-    if(savedColors.length > 40) savedColors.pop();
-    localStorage.setItem('pantone_saved', JSON.stringify(savedColors));
+    if(savedColors.length>60) savedColors.pop();
+    localStorage.setItem('cnome_saved',JSON.stringify(savedColors));
     toast(`"${best.name}" salva na paleta`);
-  } else {
-    toast('Esta cor já está na sua paleta');
-  }
+  } else { toast('Esta cor já está na sua paleta'); }
 }
 
-function renderPalette() {
-  const grid = document.getElementById('palette-grid');
-  if(!savedColors.length) {
-    grid.innerHTML = '';
-    grid.insertAdjacentHTML('afterend', '');
-    grid.parentElement.querySelector('.empty-palette')?.remove();
-    const emp = document.createElement('div');
-    emp.className = 'empty-palette';
-    emp.innerHTML = 'Nenhuma cor salva ainda.<br>Identifique uma cor e toque em <strong>Salvar</strong>.';
-    grid.after(emp);
-    return;
+function renderPalette(){
+  const grid=document.getElementById('palette-grid');
+  document.querySelector('#view-saved .empty-pal')?.remove();
+  if(!savedColors.length){
+    grid.innerHTML='';
+    const e=document.createElement('div');
+    e.className='empty-pal';
+    e.innerHTML='Nenhuma cor salva ainda.<br>Identifique uma cor e toque em <strong>Salvar</strong>.';
+    grid.after(e); return;
   }
-  grid.parentElement.querySelector('.empty-palette')?.remove();
-  grid.innerHTML = savedColors.map(s => `
-    <div class="palette-card">
-      <div class="palette-swatch" style="background:${s.pantoneHex}"></div>
-      <div class="palette-info">
-        <div class="palette-name">${s.name}</div>
-        <div class="palette-code">Pantone ${s.code}</div>
-        <div class="palette-code2" style="color:var(--accent)">${s.score}% match</div>
+  grid.innerHTML=savedColors.map(s=>{
+    const cv=CATS[s.cat]||CATS.pantone;
+    return`<div class="pal-card">
+      <div class="pal-swatch" style="background:${s.pantoneHex}"></div>
+      <div class="pal-info">
+        <div class="pal-name">${s.name}</div>
+        <div class="pal-code">${s.code}</div>
+        <span class="pal-cat" style="background:${cv.bg};color:${cv.color}">${cv.label}</span>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
-function clearPalette() {
+function clearPalette(){
   if(!savedColors.length) return;
-  savedColors = [];
-  localStorage.setItem('pantone_saved', '[]');
+  savedColors=[];
+  localStorage.setItem('cnome_saved','[]');
   renderPalette();
   toast('Paleta limpa');
 }
 
-// Init
-document.getElementById('view-identify').style.display = 'contents';
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+buildFilterChips();
+document.getElementById('view-identify').style.display='contents';
+document.getElementById('view-saved').style.display='none';
 </script>
 </body>
 </html>
